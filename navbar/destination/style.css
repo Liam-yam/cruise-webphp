@@ -1,0 +1,341 @@
+:root {
+  --white: #ffffff;
+  --light-blue: #b9e1fb;
+  --sidebar-glass: rgba(108, 128, 162, 0.38);
+  --nav-bg: rgba(14, 90, 130, 0.85);
+  --active-blue: #85c7ea;
+  --header-height: 90px;
+  --sidebar-width: 24%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+nav,
+nav * {
+  font-family: 'DM Sans', sans-serif;
+}
+
+nav .logo-text {
+  font-family: 'Playfair Display', serif;
+}
+
+nav .logo-text span {
+  font-family: 'DM Sans', sans-serif;
+}
+
+ nav {
+  width: 100%;
+  position: fixed;       
+  top: 0;
+  z-index: 1000;
+  background: rgba(14, 90, 130, 0.50);  
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 80px;
+      height: 80px;
+    }
+
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      color: #ffffff;
+      letter-spacing: 0.03em;
+      line-height: 1.2;
+    }
+
+    .logo-text span {
+      display: block;
+      font-size: 0.6rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      display: block;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-links a.active {
+      color: #ffffff;
+    }
+
+.btn-signin {
+  padding: 8px 18px;
+  font-size: 14px;
+  color: #ffffff;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+}
+
+.hamburger {
+  display: none;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding-top: var(--header-height);
+  padding-bottom: 80px;
+  color: var(--white);
+  overflow: hidden;
+}
+
+.bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(22, 30, 43, 0.12);
+  backdrop-filter: blur(6px);
+  z-index: 1;
+}
+
+.backdrop-glass {
+  position: absolute;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--sidebar-glass);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  z-index: 2;
+}
+
+.sidebar {
+  position: absolute;
+  top: var(--header-height);
+  left: 0;
+  width: var(--sidebar-width);
+  padding: 72px 20px 24px 20px;
+  z-index: 3;
+}
+
+.region {
+  margin-bottom: 67px;
+  padding-left: 40px;
+  padding-top: 25px;
+}
+
+.region h2 {
+  margin: 0 0 20px;
+  font-size: 50px;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.chevron {
+  color: var(--light-blue);
+  font-size: 0.7em;
+  position: relative;
+  bottom: 3px;
+}
+
+.region ul {
+  margin: 0;
+  padding-left: 60px;
+  list-style: none;
+}
+
+.region li {
+  position: relative;
+  margin-bottom: 6px;
+  font-size: 25px;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.25;
+}
+
+.region li::before {
+  content: "\25B6";
+  position: absolute;
+  left: -14px;
+  top: 5px;
+  font-size: 15px;
+  color: var(--light-blue);
+}
+
+.region li a,
+.region li a:visited,
+.region li a:hover,
+.region li a:active,
+.region li a:focus {
+  color: white;
+  text-decoration: none;
+}
+
+.region li a.destination-link.active-destination,
+.region li a.destination-link.active-destination:visited,
+.region li a.destination-link.active-destination:hover,
+.region li a.destination-link.active-destination:active,
+.region li a.destination-link.active-destination:focus {
+  color: #2A5677;
+  font-weight: 700;
+}
+
+
+.destination-link.active-destination {
+  color: var(--active-blue);
+  font-weight: 700;
+}
+
+.content {
+  position: relative;
+  z-index: 3;
+  width: 66%;
+  margin-left: 28%;
+  padding-top: 34px;
+  padding-bottom: 80px;
+}
+
+.section-banner {
+  width: 100%;
+  padding: 18px 34px;
+  border-radius: 34px;
+  background: rgba(108, 128, 162, 0.38);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.hero-card {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-slider {
+  width: 100%;
+  max-width: 920px;
+  overflow: hidden;
+  border-radius: 56px;
+}
+
+.hero-track {
+  display: flex;
+  transition: transform 0.6s ease;
+}
+
+.hero-slide {
+  min-width: 100%;
+  aspect-ratio: 935 / 518;
+}
+
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.destination-info {
+  width: 100%;
+  max-width: 920px;
+  margin: 26px auto 0;
+  padding: 24px 34px;
+  border-radius: 34px;
+  background: rgba(108, 128, 162, 0.38);
+  color: #ffffff;
+}
+
+.destination-info h1 {
+  margin: 0 0 10px;
+  font-size: 34px;
+  font-weight: 500;
+}
+
+.destination-info p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.slider {
+  width: 52%;
+  margin: 42px auto 0;
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
+.slider-pill {
+  width: 30%;
+  height: 8px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.slider-pill.active {
+  background: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.7);
+  transform: scaleY(1.15);
+}
