@@ -160,7 +160,6 @@
         </div>
       </nav>
 
-      <!-- HERO -->
       <section class="hero">
 
         <div class="slides" id="slides">
@@ -175,12 +174,9 @@
       </div>
 
     </div>
-        </div> <!-- closes .slides -->
-
-        <!-- BOOKING WIDGET -->
+        </div> 
         <div class="cards-wrapper" id="bookingWidget">
 
-          <!-- Box 1: Ship -->
           <div class="glass-card">
             <label>Cruise Ship</label>
             <select id="selectShip" onchange="updateDates()">
@@ -191,7 +187,6 @@
     </select>
           </div>
 
-          <!-- Box 2: Date -->
           <div class="glass-card" id="dateCard" style="cursor:pointer;position:relative;" onclick="toggleCalendar(event)">
             <label>Trip Date</label>
             <div id="dateDisplay" style="font-size:0.88rem;font-weight:500;color:#fff;min-height:1.2em;">
@@ -201,7 +196,6 @@
 
   
 
-          <!-- Box 3: Guests -->
           <div class="glass-card guests-card">
             <label>Guests</label>
             <div class="guest-row">
@@ -222,7 +216,6 @@
             </div>
           </div>
 
-          <!-- Box 4: Tier -->
           <div class="glass-card">
             <label>Tier</label>
             <select id="selectTier" onchange="updateSummary()">
@@ -233,7 +226,6 @@
             </select>
           </div>
 
-          <!-- Box 5: Book -->
           <div class="glass-card book-card">
             <div id="priceSummary" class="price-summary">
               <span class="price-label">Total</span>
@@ -244,7 +236,6 @@
 
         </div>
 
-        <!-- Booking Confirm Modal -->
         <div class="modal-backdrop" id="bookConfirmBackdrop">
           <div class="modal" id="bookConfirmModal">
             <button class="modal-close" onclick="closeBookConfirm()">✕</button>
@@ -258,7 +249,6 @@
           </div>
         </div>
 
-        <!-- Dots -->
         <div class="dots" id="dots">
           <button class="dot active" onclick="goTo(0)"></button>
           <button class="dot" onclick="goTo(1)"></button>
@@ -266,12 +256,8 @@
           <button class="dot" onclick="goTo(3)"></button>
           <button class="dot" onclick="goTo(4)"></button>
         </div>
-
-
-
       </section>
 
-      <!-- OUR CRUISE SHIPS -->
       <section class="ships-section">
         <div class="ships-inner">
 
@@ -348,7 +334,6 @@
         </div>
       </section>
 
-      <!-- AN EXPERIENCE LIKE NEVER BEFORE -->
       <section class="experience-section">
         <div class="experience-inner">
 
@@ -369,7 +354,6 @@
         </div>
       </section>
 
-      <!-- FOOTER -->
       <footer class="footer">
         <div class="footer-bg-img"></div>
         <div class="footer-overlay"></div>
@@ -406,14 +390,12 @@
       </footer>
 
 
-      <!-- PAYMENT MODAL -->
       <div class="pay-backdrop" id="payBackdrop">
         <div class="pay-modal">
 
           <button class="pay-close" onclick="closePayment()">✕</button>
           <h2 class="pay-title">Secure Payment</h2>
 
-          <!-- Booking Bar -->
           <div class="pay-booking-bar">
             <div class="pay-booking-left">
               <div class="pay-booking-label">Selected Cruise</div>
@@ -429,7 +411,6 @@
           </div>
 
 
-          <!-- Adjust Booking -->
           <div class="pay-adjust">
             <div class="pay-adjust-field">
               <label>Cruise Ship</label>
@@ -472,7 +453,7 @@
               </div>
             </div>
           </div>
-          <!-- Personal Info -->
+
           <div class="pay-personal">
             <div class="pay-inline-field">
               <label>Full Name :</label>
@@ -496,14 +477,11 @@
             </div>
           </div>
 
-          <!-- Bottom: Payment Method + Summary -->
           <div class="pay-bottom">
 
-          <!-- Payment Method -->
     <div class="pay-method-section">
       <div class="pay-method-title">Payment Method</div>
 
-      <!-- Dropdown -->
       <div class="pay-method-dropdown-wrap">
         <select id="payMethodSelect" onchange="showPayMethod(this.value)">
           <option value="">Select Payment Method</option>
@@ -524,7 +502,6 @@
         </div>
       </div>
 
-      <!-- GCash Fields -->
       <div class="pay-method-fields hidden" id="fieldsGcash">
         <div class="pay-inline-field">
           <label>Name</label>
@@ -537,7 +514,6 @@
         <button class="pay-confirm-inner-btn" onclick="confirmPayment()">CONFIRM</button>
       </div>
 
-      <!-- Maya Fields -->
       <div class="pay-method-fields hidden" id="fieldsMaya">
         <div class="pay-inline-field">
           <label>Maya Name</label>
@@ -550,7 +526,6 @@
         <button class="pay-confirm-inner-btn" onclick="confirmPayment()">CONFIRM</button>
       </div>
 
-      <!-- Card Fields (Visa, Mastercard, BPI, JCB) -->
       <div class="pay-method-fields hidden" id="fieldsCard">
         <div class="pay-inline-field">
           <label>Cardholder Name</label>
@@ -571,7 +546,6 @@
 
     </div>
 
-            <!-- Payment Summary -->
             <div class="pay-right">
               <div class="pay-summary-title">Payment Summary</div>
               <div class="pay-sum-row">
@@ -610,7 +584,6 @@
         </div>
       </div>
 
-      <!-- SUCCESS MODAL -->
       <div class="pay-backdrop" id="successBackdrop">
         <div class="success-modal">
           <div class="success-icon">✓</div>

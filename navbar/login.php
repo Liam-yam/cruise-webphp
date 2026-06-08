@@ -18,9 +18,6 @@ if ($remainingTime <= 0) {
 
 $message = "";
 
-/* =========================
-   SIGN UP
-========================= */
 if (isset($_POST['register'])) {
 
     $fullName = trim($_POST['full_name']);
@@ -69,9 +66,6 @@ if (isset($_POST['register'])) {
     }
 }
 
-/* =========================
-   LOG IN
-========================= */
 if (isset($_POST['login'])) {
 
     $email = trim($_POST['email']);
