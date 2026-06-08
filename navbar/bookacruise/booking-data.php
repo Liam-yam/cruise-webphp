@@ -19,18 +19,17 @@ class BookingData {
   public $selectedTier;
 
   public function __construct() {
-    $this->siteName = "Alena";
+    $this->siteName = "Paglaot";
     $this->tagline = "Pearl of the Orient Sea";
     $this->pageTitle = "Book Cruise";
     $this->activePage = "Book a Cruise";
     $this->bookingMessage = "";
 
-    $this->navLinks = [
+        $this->navLinks = [
       "Our Ships" => "../ourships/LostCities.php",
       "Book a Cruise" => "booking.php",
       "Destinations" => "../destination/destination.php",
-      "Profile" => "../profile/profile.php",
-      "About" => "../../index.php#about"
+      "About" => "../../navbar/about.php"
     ];
 
     $this->ships = ["Tropical", "Lost Cities", "Masquerade"];
@@ -186,7 +185,10 @@ class BookingData {
 
     $this->requireLogin();
 
-    $pendingBooking = $_SESSION["pending_booking"] ?? null;
+    if ($_SERVER["REQUEST_METHOD"] === "GET") {
+    unset($_SESSION["pending_booking"]);
+}
+$pendingBooking = $_SESSION["pending_booking"] ?? null;
 
     if (empty($pendingBooking)) {
       $this->bookingMessage = "Please complete the booking form before payment.";

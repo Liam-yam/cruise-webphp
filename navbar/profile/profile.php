@@ -88,16 +88,15 @@ if ($loadedActiveTickets === null || $loadedHistoryTickets === null) {
 }
 
 $pageTitle = "User Profile";
-$siteName = "Alena";
+$siteName = "Paglaot";
 $tagline = "Pearl of the Orient Sea";
 $activePage = "Profile";
 
 $navLinks = [
-    "Our Ships" => "../ourships/LostCities.php",
+    "Our Ships"     => "../ourships/LostCities.php",
     "Book a Cruise" => "../bookacruise/booking.php",
-    "Destinations" => "../destination/destination.php",
-    "Profile" => "profile.php",
-    "About" => "../../index.php#about"
+    "Destinations"  => "../destination/destination.php",
+    "About" => "../../navbar/about.php"
 ];
 ?>
 
@@ -518,6 +517,8 @@ $navLinks = [
 
                 <div style="display:flex; align-items:center; gap:12px;">
 
+                    <a href="profile.php" style="text-decoration:none;color:inherit;">
+
                     <div style="
                         display:flex;
                         align-items:center;
@@ -526,6 +527,7 @@ $navLinks = [
                         padding:8px 14px;
                         border-radius:30px;
                         border:1px solid rgba(255,255,255,0.15);
+                        cursor:pointer;
                     ">
 
                         <div style="
@@ -556,6 +558,8 @@ $navLinks = [
                         </span>
 
                     </div>
+
+                    </a>
 
                     <a href="../logout.php" class="btn-signin">Log Out</a>
 

@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$siteName = "Alena";
+$siteName = "Paglaot";
 $tagline = "Pearl of the Orient Sea";
 $activePage = "Destinations";
 
@@ -9,8 +9,7 @@ $navLinks = [
     "Our Ships" => "../ourships/LostCities.php",
     "Book a Cruise" => "../bookacruise/booking.php",
     "Destinations" => "destination.php",
-    "Profile" => "../profile/profile.php",
-    "About" => "../../index.php#about"
+    "About" => "../../navbar/about.php"
 ];
 
 $regions = [
@@ -78,6 +77,8 @@ $heroImages = [
 
             <div style="display:flex; align-items:center; gap:12px;">
 
+                <a href="../profile/profile.php" style="text-decoration:none; color:inherit;">
+
                 <div style="
                     display:flex;
                     align-items:center;
@@ -86,6 +87,7 @@ $heroImages = [
                     padding:8px 14px;
                     border-radius:30px;
                     border:1px solid rgba(255,255,255,0.15);
+                    cursor:pointer;
                 ">
 
                     <div style="
@@ -116,6 +118,8 @@ $heroImages = [
                     </span>
 
                 </div>
+
+                </a>
 
                 <a href="../logout.php" class="btn-signin">Log Out</a>
 

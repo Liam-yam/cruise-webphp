@@ -46,6 +46,8 @@ include_once "navbar/bookacruise/booking-data.php";
 
             <div style="display:flex; align-items:center; gap:12px;">
 
+                <a href="../profile/profile.php" style="text-decoration:none; color:inherit;">
+
                 <div style="
                     display:flex;
                     align-items:center;
@@ -54,6 +56,7 @@ include_once "navbar/bookacruise/booking-data.php";
                     padding:8px 14px;
                     border-radius:30px;
                     border:1px solid rgba(255,255,255,0.15);
+                    cursor:pointer;
                 ">
 
                     <div style="
@@ -83,6 +86,8 @@ include_once "navbar/bookacruise/booking-data.php";
                         <?php echo $_SESSION['user']; ?>
                     </span>
                 </div>
+
+                </a>
 
                 <a href="../logout.php" class="btn-signin">Log Out</a>
 

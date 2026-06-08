@@ -3,7 +3,7 @@ session_start();
 
 include 'ourships.php';
 
-$siteName = "Alena";
+$siteName = "Paglaot";
 $tagline = "Pearl of the Orient Sea";
 $activePage = "Our Ships";
 
@@ -11,8 +11,7 @@ $navLinks = [
     "Our Ships" => "LostCities.php",
     "Book a Cruise" => "../bookacruise/booking.php",
     "Destinations" => "../destination/destination.php",
-    "Profile" => "../profile/profile.php",
-    "About" => "../../index.php#about"
+    "About" => "../../navbar/about.php"
 ];
 
 $amenities = new Amenities();
@@ -64,6 +63,8 @@ $night = $amenities->getNightInfo();
 
                 <div style="display:flex; align-items:center; gap:12px;">
 
+                    <a href="../profile/profile.php" style="text-decoration:none; color:inherit;">
+
                     <div style="
                         display:flex;
                         align-items:center;
@@ -72,6 +73,7 @@ $night = $amenities->getNightInfo();
                         padding:8px 14px;
                         border-radius:30px;
                         border:1px solid rgba(255,255,255,0.15);
+                        cursor:pointer;
                     ">
 
                         <div style="
@@ -102,6 +104,8 @@ $night = $amenities->getNightInfo();
                         </span>
 
                     </div>
+
+                    </a>
 
                     <a href="../logout.php" class="btn-signin">Log Out</a>
 
@@ -241,11 +245,13 @@ $night = $amenities->getNightInfo();
         </div>
     </section>
 
-    <button class="btn" id="bookBtn">BOOK NOW!</button>
+    <div style="text-align: center; width: 100%;">
+    <a href="../bookacruise/booking.php" class="btn" id="bookBtn">BOOK NOW!</a>
+</div>
+
 
 </div>
 
-<script src="script.js"></script>
 
 </body>
 </html>

@@ -10,7 +10,7 @@ body {
   margin: 0;
   min-height: 100vh;
   color: #101010;
-  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: #ffffff;
 }
 
@@ -725,6 +725,7 @@ main {
 .ticket-photo h2 {
   position: relative;
   z-index: 1;
+  font-family: 'Playfair Display', serif;
   margin: 24px 28px;
   color: #ffffff;
   font-family: 'Playfair Display', serif;
@@ -767,6 +768,7 @@ main {
 .ticket-info-top h3 {
   margin: 0;
   color: #2b5d7c;
+  font-family: 'Playfair Display', serif;
   font-family: 'Playfair Display', serif;
   font-size: 1.4rem;
   font-style: italic;
@@ -939,6 +941,7 @@ main {
 .package-info h2 {
   margin: 0 0 18px;
   color: #4b4f52;
+  font-family: 'Playfair Display', serif;
   font-size: 28px;
   font-style: italic;
   font-weight: 800;

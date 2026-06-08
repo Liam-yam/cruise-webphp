@@ -2,9 +2,9 @@
   session_start();
   require_once 'navbar/models.php';
 
-  $siteName = "Alena";
+  $siteName = "Paglaot";
   $tagline = "Pearl of the Orient Sea";
-  $pageTitle = "Alena";
+  $pageTitle = "Paglaot";
   $currentYear = date('Y');
 
   $ships = [
@@ -17,8 +17,7 @@
     'Our Ships'     => 'navbar/ourships/LostCities.php',
     'Book a Cruise' => 'navbar/bookacruise/booking.php',
     'Destinations'  => 'navbar/destination/destination.php',
-    'Profile' => 'navbar/profile/profile.php',
-    'About'         => '#'
+    'About'         => 'navbar/about.php'
   ];
 
   $activePage = 'Our Ships';
@@ -98,50 +97,51 @@
 
   <div style="display:flex; align-items:center; gap:12px;">
 
-      <div style="
-          display:flex;
-          align-items:center;
-          gap:10px;
-          background:rgba(255,255,255,0.08);
-          padding:8px 14px;
-          border-radius:30px;
-          border:1px solid rgba(255,255,255,0.15);
-      ">
+    <a href="navbar/profile/profile.php" style="text-decoration:none;">
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+            background:rgba(255,255,255,0.08);
+            padding:8px 14px;
+            border-radius:30px;
+            border:1px solid rgba(255,255,255,0.15);
+            cursor:pointer;
+        ">
+            <div style="
+                width:34px;
+                height:34px;
+                border-radius:50%;
+                background:#67B5D1;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color:white;
+                font-weight:700;
+                font-size:.9rem;
+            ">
+                <?php echo strtoupper(substr($_SESSION['user'], 0, 1)); ?>
+            </div>
 
-          <div style="
-              width:34px;
-              height:34px;
-              border-radius:50%;
-              background:#67B5D1;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              color:white;
-              font-weight:700;
-              font-size:.9rem;
-          ">
-              <?php echo strtoupper(substr($_SESSION['user'], 0, 1)); ?>
-          </div>
+            <span style="
+                color:white;
+                font-size:.88rem;
+                font-weight:500;
+                max-width:120px;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            ">
+                <?php echo $_SESSION['user']; ?>
+            </span>
+        </div>
+    </a>
 
-          <span style="
-              color:white;
-              font-size:.88rem;
-              font-weight:500;
-              max-width:120px;
-              overflow:hidden;
-              text-overflow:ellipsis;
-              white-space:nowrap;
-          ">
-              <?php echo $_SESSION['user']; ?>
-          </span>
+    <a href="navbar/logout.php" class="btn-signin">
+        Log Out
+    </a>
 
-      </div>
-
-      <a href="navbar/logout.php" class="btn-signin">
-          Log Out
-      </a>
-
-  </div>
+</div>
 
   <?php else: ?>
 
