@@ -1,7 +1,9 @@
 <?php
-session_start();
-require_once '../models.php';
-require_once '../../db.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../models.php';
+require_once __DIR__ . '/../../db.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: ../login.php');
@@ -31,16 +33,57 @@ $activeTickets = [];
 $historyTickets = [];
 $profileMessage = "";
 
+function getTicketConfig($ship) {
+    $configs = [
+        "Tropical" => [
+            "image" => "../bookacruise/assets/tickets/tp-ticket.png",
+            "theme" => "tropical",
+            "to" => "Tropical Isles"
+        ],
+        "Masquerade" => [
+            "image" => "../bookacruise/assets/tickets/mq-ticket.png",
+            "theme" => "masquerade",
+            "to" => "Masquerade Bay"
+        ],
+        "Lost Cities" => [
+            "image" => "../bookacruise/assets/tickets/lc-ticket.png",
+            "theme" => "lost-cities",
+            "to" => "Lost Cities"
+        ]
+    ];
+
+    return $configs[$ship] ?? $configs["Lost Cities"];
+}
+
 function formatTicketRow($row) {
+    $orderNo = (int) $row['order_no'];
+    $ship = $row['cruise_ship'];
+    $ticketConfig = getTicketConfig($ship);
+    $guestCount = (int) $row['adults'] + (int) $row['children'];
+
     return [
-        'id' => 'ORD-' . str_pad($row['order_no'], 5, '0', STR_PAD_LEFT),
-        'ship' => $row['cruise_ship'],
+        'id' => 'ORD-' . str_pad($orderNo, 5, '0', STR_PAD_LEFT),
+        'order_no' => $orderNo,
+        'ship' => $ship,
+        'title' => 'Paglaot - ' . strtoupper($ship),
+        'name' => $row['user_name'],
         'date' => $row['trip_date'],
+        'departure_date' => $row['departure_date'],
         'tier' => $row['tier'],
-        'guests' => (int) $row['adults'] + (int) $row['children'],
+        'ticket_type' => $row['tier'] . ' Tier',
+        'guests' => $guestCount,
+        'guests_label' => $guestCount . ' Guest' . ($guestCount === 1 ? '' : 's'),
         'price' => 'PHP ' . number_format((float) $row['total_price']),
         'payment' => $row['payment_method'],
-        'status' => $row['status']
+        'status' => $row['status'],
+        'from' => 'Manila Port',
+        'to' => $ticketConfig['to'],
+        'room' => 'D' . (($orderNo % 8) + 1) . '-' . str_pad((($orderNo % 900) + 100), 3, '0', STR_PAD_LEFT),
+        'issued' => date('M d, Y h:i A', strtotime($row['paid_at'])),
+        'image' => $ticketConfig['image'],
+        'theme' => $ticketConfig['theme'],
+        'logo' => '../bookacruise/assets/tickets/logo.svg',
+        'download' => 'paglaot-' . strtolower(str_replace(' ', '-', $ship)) . '-ticket-' . $orderNo . '.png'
     ];
 }
 
@@ -49,8 +92,8 @@ function fetchTickets($conn, $userEmail, $userName, $history = false) {
         ? "(b.status = 'completed' OR b.departure_date < CURDATE())"
         : "(b.status = 'paid' AND b.departure_date >= CURDATE())";
 
-    $sql = "SELECT b.order_no, b.cruise_ship, b.trip_date, b.departure_date, b.tier,
-                   b.adults, b.children, b.total_price, b.status, p.payment_method
+    $sql = "SELECT b.order_no, b.user_name, b.cruise_ship, b.trip_date, b.departure_date, b.tier,
+                   b.adults, b.children, b.total_price, b.status, p.payment_method, p.paid_at
             FROM booking b
             INNER JOIN payment p ON p.order_no = b.order_no
             WHERE (b.user_email = ? OR (b.user_email = '' AND b.user_name = ?))
@@ -97,6 +140,10 @@ $navLinks = [
     "Destinations"  => "../destination/destination.php",
     "About" => "../../navbar/about.php"
 ];
+
+function e($value) {
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
 ?>
 
 <!DOCTYPE html>
@@ -106,6 +153,7 @@ $navLinks = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?php echo $pageTitle; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../bookacruise/styles.css">
     <style>
         *,
         *::before,
@@ -624,7 +672,26 @@ $navLinks = [
                             </div>
                             <div class="ticket-price"><?php echo htmlspecialchars($ticket['price']); ?></div>
                             <div class="ticket-action">
-                                <button class="ticket-btn">View Details</button>
+                                <button type="button"
+                                        class="ticket-btn"
+                                        data-ticket-open
+                                        data-ticket-image="<?php echo e($ticket['image']); ?>"
+                                        data-ticket-title="<?php echo e($ticket['title']); ?>"
+                                        data-ticket-ship="<?php echo e(strtoupper($ticket['ship'])); ?>"
+                                        data-ticket-name="<?php echo e($ticket['name']); ?>"
+                                        data-ticket-type="<?php echo e($ticket['ticket_type']); ?>"
+                                        data-ticket-from="<?php echo e($ticket['from']); ?>"
+                                        data-ticket-to="<?php echo e($ticket['to']); ?>"
+                                        data-ticket-room="<?php echo e($ticket['room']); ?>"
+                                        data-ticket-issued="<?php echo e($ticket['issued']); ?>"
+                                        data-ticket-departure="<?php echo e($ticket['departure_date']); ?>"
+                                        data-ticket-order="<?php echo e($ticket['id']); ?>"
+                                        data-ticket-guests="<?php echo e($ticket['guests_label']); ?>"
+                                        data-ticket-logo="<?php echo e($ticket['logo']); ?>"
+                                        data-ticket-download="<?php echo e($ticket['download']); ?>"
+                                        data-ticket-theme="<?php echo e($ticket['theme']); ?>">
+                                    View Details
+                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -666,7 +733,26 @@ $navLinks = [
                             </div>
                             <div class="ticket-price"><?php echo htmlspecialchars($ticket['price']); ?></div>
                             <div class="ticket-action">
-                                <button class="ticket-btn" style="background: #bbb; cursor: not-allowed;" disabled>Completed</button>
+                                <button type="button"
+                                        class="ticket-btn"
+                                        data-ticket-open
+                                        data-ticket-image="<?php echo e($ticket['image']); ?>"
+                                        data-ticket-title="<?php echo e($ticket['title']); ?>"
+                                        data-ticket-ship="<?php echo e(strtoupper($ticket['ship'])); ?>"
+                                        data-ticket-name="<?php echo e($ticket['name']); ?>"
+                                        data-ticket-type="<?php echo e($ticket['ticket_type']); ?>"
+                                        data-ticket-from="<?php echo e($ticket['from']); ?>"
+                                        data-ticket-to="<?php echo e($ticket['to']); ?>"
+                                        data-ticket-room="<?php echo e($ticket['room']); ?>"
+                                        data-ticket-issued="<?php echo e($ticket['issued']); ?>"
+                                        data-ticket-departure="<?php echo e($ticket['departure_date']); ?>"
+                                        data-ticket-order="<?php echo e($ticket['id']); ?>"
+                                        data-ticket-guests="<?php echo e($ticket['guests_label']); ?>"
+                                        data-ticket-logo="<?php echo e($ticket['logo']); ?>"
+                                        data-ticket-download="<?php echo e($ticket['download']); ?>"
+                                        data-ticket-theme="<?php echo e($ticket['theme']); ?>">
+                                    View Details
+                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -678,6 +764,74 @@ $navLinks = [
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+    </div>
+
+    <div class="ticket-backdrop" id="ticketBackdrop" aria-hidden="true">
+        <div class="ticket-shell">
+            <button type="button"
+                    class="ticket-close"
+                    data-ticket-close
+                    aria-label="Close ticket">
+                &times;
+            </button>
+
+            <article class="boarding-ticket" id="paidTicket">
+                <div class="ticket-ribbon">BOARDING PASS</div>
+
+                <div class="ticket-photo" data-ticket-photo>
+                    <h2 data-ticket-text="title"></h2>
+                </div>
+
+                <div class="ticket-info">
+                    <img src="../bookacruise/assets/tickets/logo.svg"
+                         alt=""
+                         class="ticket-watermark"
+                         data-ticket-logo-img
+                         aria-hidden="true">
+
+                    <div class="ticket-info-top">
+                        <h3 data-ticket-text="ship"></h3>
+                        <div class="ticket-barcode" aria-hidden="true"></div>
+                    </div>
+
+                    <div class="ticket-field wide">
+                        <span>Name</span>
+                        <strong data-ticket-text="name"></strong>
+                    </div>
+
+                    <div class="ticket-field">
+                        <span>Ticket Type</span>
+                        <strong data-ticket-text="type"></strong>
+                    </div>
+
+                    <div class="ticket-route">
+                        <div class="ticket-field">
+                            <span>From</span>
+                            <strong data-ticket-text="from"></strong>
+                        </div>
+
+                        <div class="ticket-field">
+                            <span>To</span>
+                            <strong data-ticket-text="to"></strong>
+                        </div>
+                    </div>
+
+                    <div class="ticket-field room">
+                        <span>Room Number:</span>
+                        <strong data-ticket-text="room"></strong>
+                    </div>
+
+                    <p>Date and Time Issued: <strong data-ticket-text="issued"></strong></p>
+                    <p>Departure Date: <strong data-ticket-text="departure"></strong></p>
+                    <p>Order No: <strong data-ticket-text="order"></strong></p>
+                    <p>Guests: <strong data-ticket-text="guests"></strong></p>
+                </div>
+            </article>
+
+            <button type="button" class="ticket-download" id="ticketDownload">
+                Download
+            </button>
         </div>
     </div>
 
@@ -695,6 +849,240 @@ $navLinks = [
             document.getElementById(tab).classList.add('active');
             event.target.classList.add('active');
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const ticketBackdrop = document.getElementById('ticketBackdrop');
+            const paidTicket = document.getElementById('paidTicket');
+            const ticketPhoto = document.querySelector('[data-ticket-photo]');
+            const ticketLogoImage = document.querySelector('[data-ticket-logo-img]');
+            const ticketClose = document.querySelector('[data-ticket-close]');
+            const ticketDownload = document.getElementById('ticketDownload');
+            const openButtons = document.querySelectorAll('[data-ticket-open]');
+
+            function setTicketText(key, value) {
+                const target = document.querySelector(`[data-ticket-text="${key}"]`);
+
+                if (target) {
+                    target.textContent = value || '';
+                }
+            }
+
+            function openTicket(button) {
+                const data = button.dataset;
+
+                paidTicket.dataset.ticketImage = data.ticketImage;
+                paidTicket.dataset.ticketTitle = data.ticketTitle;
+                paidTicket.dataset.ticketShip = data.ticketShip;
+                paidTicket.dataset.ticketName = data.ticketName;
+                paidTicket.dataset.ticketType = data.ticketType;
+                paidTicket.dataset.ticketFrom = data.ticketFrom;
+                paidTicket.dataset.ticketTo = data.ticketTo;
+                paidTicket.dataset.ticketRoom = data.ticketRoom;
+                paidTicket.dataset.ticketIssued = data.ticketIssued;
+                paidTicket.dataset.ticketDeparture = data.ticketDeparture;
+                paidTicket.dataset.ticketOrder = data.ticketOrder;
+                paidTicket.dataset.ticketGuests = data.ticketGuests;
+                paidTicket.dataset.ticketLogo = data.ticketLogo;
+                paidTicket.dataset.ticketDownload = data.ticketDownload;
+
+                setTicketText('title', data.ticketTitle);
+                setTicketText('ship', data.ticketShip);
+                setTicketText('name', data.ticketName);
+                setTicketText('type', data.ticketType);
+                setTicketText('from', data.ticketFrom);
+                setTicketText('to', data.ticketTo);
+                setTicketText('room', data.ticketRoom);
+                setTicketText('issued', data.ticketIssued);
+                setTicketText('departure', data.ticketDeparture);
+                setTicketText('order', data.ticketOrder);
+                setTicketText('guests', data.ticketGuests);
+
+                ticketPhoto.style.backgroundImage = `url('${data.ticketImage}')`;
+                ticketLogoImage.src = data.ticketLogo;
+                ticketBackdrop.className = `ticket-backdrop visible ticket-theme-${data.ticketTheme}`;
+                ticketBackdrop.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeTicket() {
+                ticketBackdrop.classList.remove('visible');
+                ticketBackdrop.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+
+            function loadTicketImage(src) {
+                return new Promise(resolve => {
+                    const image = new Image();
+                    image.onload = () => resolve(image);
+                    image.onerror = () => resolve(null);
+                    image.src = src;
+                });
+            }
+
+            function drawCoverImage(context, image, x, y, width, height) {
+                const scale = Math.max(width / image.width, height / image.height);
+                const drawWidth = image.width * scale;
+                const drawHeight = image.height * scale;
+                const drawX = x + (width - drawWidth) / 2;
+                const drawY = y + (height - drawHeight) / 2;
+
+                context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+            }
+
+            function roundedRect(context, x, y, width, height, radius) {
+                if (typeof context.roundRect === 'function') {
+                    context.roundRect(x, y, width, height, radius);
+                    return;
+                }
+
+                context.moveTo(x + radius, y);
+                context.lineTo(x + width - radius, y);
+                context.quadraticCurveTo(x + width, y, x + width, y + radius);
+                context.lineTo(x + width, y + height - radius);
+                context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                context.lineTo(x + radius, y + height);
+                context.quadraticCurveTo(x, y + height, x, y + height - radius);
+                context.lineTo(x, y + radius);
+                context.quadraticCurveTo(x, y, x + radius, y);
+            }
+
+            function drawTextField(context, label, value, x, y, width) {
+                context.fillStyle = '#3b3b3b';
+                context.font = '24px Arial';
+                context.fillText(label, x, y);
+
+                context.fillStyle = '#d8d8d8';
+                context.strokeStyle = '#2b77a8';
+                context.lineWidth = 1;
+                context.beginPath();
+                roundedRect(context, x, y + 8, width, 34, 9);
+                context.fill();
+                context.stroke();
+
+                context.fillStyle = '#183c5a';
+                context.font = 'bold 15px Arial';
+                context.fillText(value, x + 12, y + 31);
+            }
+
+            function drawBarcode(context, x, y, width, height) {
+                context.fillStyle = '#111111';
+
+                for (let cursor = x; cursor < x + width; cursor += 7) {
+                    const barWidth = cursor % 3 === 0 ? 2 : 4;
+                    context.fillRect(cursor, y, barWidth, height);
+                }
+            }
+
+            function fitText(context, text, x, y, maxWidth, startSize, fontFamily) {
+                let size = startSize;
+
+                do {
+                    context.font = `bold italic ${size}px ${fontFamily}`;
+                    size -= 1;
+                } while (context.measureText(text).width > maxWidth && size > 16);
+
+                context.fillText(text, x, y);
+            }
+
+            async function downloadTicketPng() {
+                const data = paidTicket.dataset;
+
+                if (!data.ticketImage) {
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 1203;
+                canvas.height = 487;
+
+                const context = canvas.getContext('2d');
+                const image = await loadTicketImage(data.ticketImage);
+                const logo = await loadTicketImage(data.ticketLogo);
+
+                context.fillStyle = '#ffffff';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+
+                context.fillStyle = '#2b5d7c';
+                context.fillRect(0, 0, 117, 487);
+
+                context.save();
+                context.translate(58, 244);
+                context.rotate(-Math.PI / 2);
+                context.fillStyle = '#ffffff';
+                context.font = 'bold italic 48px Georgia';
+                context.textAlign = 'center';
+                context.fillText('BOARDING PASS', 0, 16);
+                context.restore();
+
+                if (image) {
+                    drawCoverImage(context, image, 117, 0, 641, 487);
+                    context.fillStyle = 'rgba(9, 29, 54, 0.28)';
+                    context.fillRect(117, 0, 641, 487);
+                } else {
+                    context.fillStyle = '#1a3a5c';
+                    context.fillRect(117, 0, 641, 487);
+                }
+
+                context.fillStyle = '#ffffff';
+                context.font = 'bold italic 28px Georgia';
+                context.textAlign = 'left';
+                context.fillText(data.ticketTitle, 138, 48);
+
+                context.fillStyle = '#ffffff';
+                context.fillRect(758, 0, 445, 487);
+
+                if (logo) {
+                    context.save();
+                    context.globalAlpha = 0.09;
+                    context.drawImage(logo, 892, 100, 250, 250);
+                    context.restore();
+                }
+
+                context.fillStyle = '#2b5d7c';
+                fitText(context, data.ticketShip, 790, 58, 178, 28, 'Georgia');
+                drawBarcode(context, 986, 16, 210, 60);
+
+                drawTextField(context, 'Name', data.ticketName, 780, 132, 370);
+                drawTextField(context, 'Ticket Type', data.ticketType, 780, 202, 210);
+                drawTextField(context, 'From', data.ticketFrom, 780, 282, 160);
+                drawTextField(context, 'To', data.ticketTo, 990, 282, 150);
+
+                context.fillStyle = '#3b3b3b';
+                context.font = '22px Arial';
+                context.fillText('Room Number:', 780, 382);
+                context.fillStyle = '#d8d8d8';
+                context.strokeStyle = '#2b77a8';
+                context.beginPath();
+                roundedRect(context, 980, 354, 112, 34, 9);
+                context.fill();
+                context.stroke();
+                context.fillStyle = '#183c5a';
+                context.font = 'bold 15px Arial';
+                context.fillText(data.ticketRoom, 992, 377);
+
+                context.fillStyle = '#151515';
+                context.font = '18px Arial';
+                context.fillText(`Date and Time Issued: ${data.ticketIssued}`, 780, 426);
+                context.fillText(`Departure Date: ${data.ticketDeparture}`, 780, 458);
+
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = data.ticketDownload || 'paglaot-ticket.png';
+                link.click();
+            }
+
+            openButtons.forEach(button => {
+                button.addEventListener('click', () => openTicket(button));
+            });
+
+            ticketClose.addEventListener('click', closeTicket);
+            ticketBackdrop.addEventListener('click', event => {
+                if (event.target === ticketBackdrop) {
+                    closeTicket();
+                }
+            });
+            ticketDownload.addEventListener('click', downloadTicketPng);
+        });
     </script>
 </body>
 </html>
