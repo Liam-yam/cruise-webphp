@@ -3,7 +3,6 @@ session_start();
 require_once '../models.php';
 require_once '../../db.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user'])) {
     header('Location: ../login.php');
     exit;
