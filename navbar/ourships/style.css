@@ -166,7 +166,7 @@ nav .logo-text span {
 /* HERO */
 .hero {
     text-align: center;
-    padding: 60px 20px;
+     padding: 150px 20px 60px;
 }
 
 .hero h1 {
@@ -207,6 +207,7 @@ section h2 {
 .ent-card {
     flex: 1;
     text-align: center;
+       min-width: 0;    /* add this — fixes flex overflow clipping */
 }
 
 .ent-card img {
@@ -215,14 +216,19 @@ section h2 {
     object-fit: cover;
 }
 
-.ent-card h4 {
+.ent-card h3 {
     font-family: 'Playfair Display', serif;
     margin: 10px 0;
+     font-weight: 600;    /* ← add this */
+    font-size: 16px;     /* ← add this to control size */
 }
 
 .ent-card p {
     font-size: 12px;
     text-align: left;
+     overflow-wrap: break-word;   /* add this */
+    word-break: break-word;      /* add this */
+
 }
 
 .amenities-section {
@@ -275,7 +281,7 @@ section h2 {
     font-size: 16px;
     line-height: 1.2;
     color: white;
-    font-weight: bold;
+    
 }
 
 .amenity-desc {

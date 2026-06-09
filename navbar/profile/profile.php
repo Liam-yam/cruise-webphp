@@ -38,17 +38,20 @@ function getTicketConfig($ship) {
         "Tropical" => [
             "image" => "../bookacruise/assets/tickets/tp-ticket.png",
             "theme" => "tropical",
-            "to" => "Tropical Isles"
+            "to" => "Tropical Isles",
+            "card_image" => "../../static/tropical.png"
         ],
         "Masquerade" => [
             "image" => "../bookacruise/assets/tickets/mq-ticket.png",
             "theme" => "masquerade",
-            "to" => "Masquerade Bay"
+            "to" => "Masquerade Bay",
+            "card_image" => "../../static/masq.png"
         ],
         "Lost Cities" => [
             "image" => "../bookacruise/assets/tickets/lc-ticket.png",
             "theme" => "lost-cities",
-            "to" => "Lost Cities"
+            "to" => "Lost Cities",
+            "card_image" => "../../static/lost.png"
         ]
     ];
 
@@ -80,8 +83,9 @@ function formatTicketRow($row) {
         'to' => $ticketConfig['to'],
         'room' => 'D' . (($orderNo % 8) + 1) . '-' . str_pad((($orderNo % 900) + 100), 3, '0', STR_PAD_LEFT),
         'issued' => date('M d, Y h:i A', strtotime($row['paid_at'])),
-        'image' => $ticketConfig['image'],
+                'image' => $ticketConfig['image'],
         'theme' => $ticketConfig['theme'],
+        'card_image' => $ticketConfig['card_image'],
         'logo' => '../bookacruise/assets/tickets/logo.svg',
         'download' => 'paglaot-' . strtolower(str_replace(' ', '-', $ship)) . '-ticket-' . $orderNo . '.png'
     ];
@@ -163,9 +167,9 @@ function e($value) {
             padding: 0;
         }
 
-        body {
+                                body {
             font-family: 'DM Sans', sans-serif;
-            background: #f5f7fa;
+            background: #0a1628;
             padding-top: 90px;
         }
 
@@ -306,8 +310,8 @@ function e($value) {
             padding: 40px 2rem;
         }
 
-        .profile-card {
-            background: #ffffff;
+                .profile-card {
+            background: #0f3061;
             border-radius: 16px;
             padding: 40px;
             text-align: center;
@@ -333,7 +337,7 @@ function e($value) {
         .profile-name {
             font-family: 'Playfair Display', serif;
             font-size: 1.8rem;
-            color: #0a1628;
+            color: #e4e4e4;
             margin-bottom: 30px;
             font-weight: 600;
         }
@@ -388,35 +392,72 @@ function e($value) {
             margin-top: 24px;
         }
 
-        .ticket-card {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 24px;
-            border-left: 5px solid #67B5D1;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+                .ticket-card {
+                    position: relative;
+                    background: #0a1628;
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    border-radius: 12px;
+                    padding: 0;
+                    border-left: 5px solid #67B5D1;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    overflow: hidden;
+                    min-height: 320px;
+                }
 
-        .ticket-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
+                .ticket-card-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(10, 22, 40, 0.55);
+                    pointer-events: none;
+                    z-index: 1;
+                }
 
-        .ticket-id {
-            font-size: 0.8rem;
-            color: #67B5D1;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
+                .ticket-card-content {
+                    position: relative;
+                    z-index: 2;
+                    padding: 24px;
+                    color: #ffffff;
+                }
 
-        .ticket-ship {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            color: #0a1628;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
+                .ticket-card-past {
+                    opacity: 0.95;
+                }
+
+                .ticket-card-past .ticket-card-overlay {
+                    background: rgba(10, 22, 40, 0.7);
+                }
+
+                .ticket-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+                }
+
+                .ticket-id {
+                    font-size: 0.8rem;
+                    color: #ffffff;
+                    background: rgba(14, 90, 130, 0.85);
+                    display: inline-block;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                    margin-bottom: 8px;
+                }
+
+                .ticket-ship {
+                    font-family: 'Playfair Display', serif;
+                    font-size: 1.3rem;
+                    color: #ffffff;
+                    font-weight: 600;
+                    margin-bottom: 12px;
+                    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+                }
 
         .ticket-details {
             display: flex;
@@ -425,11 +466,11 @@ function e($value) {
             margin-bottom: 16px;
         }
 
-        .ticket-detail-row {
+                .ticket-detail-row {
             display: flex;
             justify-content: space-between;
             font-size: 0.85rem;
-            color: #555e6e;
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .ticket-detail-row span:first-child {
@@ -437,40 +478,42 @@ function e($value) {
         }
 
         .ticket-detail-row span:last-child {
-            color: #0a1628;
+            color: #ffffff;
             font-weight: 600;
         }
 
         .ticket-price {
             font-family: 'Playfair Display', serif;
             font-size: 1.5rem;
-            color: #67B5D1;
+            color: #ffffff;
             font-weight: 600;
             text-align: right;
             padding-top: 16px;
-            border-top: 1px solid #e8eaf0;
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         .ticket-action {
             margin-top: 16px;
         }
 
-        .ticket-btn {
+                .ticket-btn {
             width: 100%;
             padding: 10px;
-            background: #67B5D1;
-            color: #ffffff;
+            background: rgba(255, 255, 255, 0.95);
+            color: #0a1628;
             border: none;
             border-radius: 8px;
             font-family: 'DM Sans', sans-serif;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.2s ease;
         }
 
         .ticket-btn:hover {
-            background: #4fa0be;
+            background: #ffffff;
+            transform: translateY(-1px);
         }
 
         .empty-state {
@@ -649,7 +692,9 @@ function e($value) {
             <div class="tickets-grid">
                 <?php if (!empty($activeTickets)): ?>
                     <?php foreach ($activeTickets as $ticket): ?>
-                        <div class="ticket-card">
+                                                <div class="ticket-card" style="background-image: url('<?php echo htmlspecialchars($ticket['card_image']); ?>');">
+                            <div class="ticket-card-overlay"></div>
+                            <div class="ticket-card-content">
                             <div class="ticket-id"><?php echo htmlspecialchars($ticket['id']); ?></div>
                             <div class="ticket-ship"><?php echo htmlspecialchars($ticket['ship']); ?></div>
                             <div class="ticket-details">
@@ -690,8 +735,9 @@ function e($value) {
                                         data-ticket-logo="<?php echo e($ticket['logo']); ?>"
                                         data-ticket-download="<?php echo e($ticket['download']); ?>"
                                         data-ticket-theme="<?php echo e($ticket['theme']); ?>">
-                                    View Details
+                                                                        View Details
                                 </button>
+                            </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -710,7 +756,9 @@ function e($value) {
             <div class="tickets-grid">
                 <?php if (!empty($historyTickets)): ?>
                     <?php foreach ($historyTickets as $ticket): ?>
-                        <div class="ticket-card" style="border-left-color: #bbb; opacity: 0.85;">
+                                                <div class="ticket-card ticket-card-past" style="background-image: url('<?php echo htmlspecialchars($ticket['card_image']); ?>');">
+                            <div class="ticket-card-overlay"></div>
+                            <div class="ticket-card-content">
                             <div class="ticket-id"><?php echo htmlspecialchars($ticket['id']); ?></div>
                             <div class="ticket-ship"><?php echo htmlspecialchars($ticket['ship']); ?></div>
                             <div class="ticket-details">
@@ -751,8 +799,9 @@ function e($value) {
                                         data-ticket-logo="<?php echo e($ticket['logo']); ?>"
                                         data-ticket-download="<?php echo e($ticket['download']); ?>"
                                         data-ticket-theme="<?php echo e($ticket['theme']); ?>">
-                                    View Details
+                                                                        View Details
                                 </button>
+                            </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
