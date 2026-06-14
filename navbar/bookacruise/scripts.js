@@ -695,12 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
     context.fillText(text, x, y);
   }
 
-  async function downloadTicketPng() {
-    if (!paidTicket) {
-      return;
-    }
-
-    const data = paidTicket.dataset;
+  async function drawSingleTicket(data, seatSuffix, guestLabel) {
     const canvas = document.createElement("canvas");
     canvas.width = 1203;
     canvas.height = 487;
@@ -757,6 +752,8 @@ document.addEventListener("DOMContentLoaded", () => {
     drawTextField(context, "From", data.ticketFrom, 780, 282, 160);
     drawTextField(context, "To", data.ticketTo, 990, 282, 150);
 
+    // Per-guest seat number: append suffix to distinguish seats
+    const seatNumber = data.ticketRoom + seatSuffix;
     context.fillStyle = "#3b3b3b";
     context.font = "22px Arial";
     context.fillText("Room Number:", 780, 382);
@@ -768,17 +765,51 @@ document.addEventListener("DOMContentLoaded", () => {
     context.stroke();
     context.fillStyle = "#183c5a";
     context.font = "bold 15px Arial";
-    context.fillText(data.ticketRoom, 992, 377);
+    context.fillText(seatNumber, 992, 377);
 
     context.fillStyle = "#151515";
     context.font = "18px Arial";
-    context.fillText(`Date and Time Issued: ${data.ticketIssued}`, 780, 426);
-    context.fillText(`Departure Date: ${data.ticketDeparture}`, 780, 458);
+    context.fillText(`Date and Time Issued: ${data.ticketIssued}`, 780, 414);
+    context.fillText(`Departure Date: ${data.ticketDeparture}`, 780, 444);
+    context.fillText(`Order Number: ${data.ticketOrder}`, 780, 474);
 
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = data.ticketDownload || "paglaot-ticket.png";
-    link.click();
+    // Guest label (e.g. "Guest 2 of 3") drawn in the photo area
+    if (guestLabel) {
+      context.fillStyle = "rgba(255,255,255,0.85)";
+      context.font = "bold 20px Arial";
+      context.textAlign = "left";
+      context.fillText(guestLabel, 130, 472);
+    }
+
+    return canvas;
+  }
+
+  async function downloadTicketPng() {
+    if (!paidTicket) {
+      return;
+    }
+
+    const data = paidTicket.dataset;
+
+    // Parse total guest count from data-ticket-guests (e.g. "3 Guests" or "1 Guest")
+    const guestCount = parseInt(data.ticketGuests) || 1;
+    // Seat suffixes: first ticket keeps the original room, extras get -2, -3, etc.
+    const seatSuffixes = ["", ...Array.from({ length: guestCount - 1 }, (_, i) => `-${i + 2}`)];
+
+    for (let i = 0; i < guestCount; i++) {
+      const guestLabel = guestCount > 1 ? `Guest ${i + 1} of ${guestCount}` : null;
+      const canvas = await drawSingleTicket(data, seatSuffixes[i], guestLabel);
+      const baseName = (data.ticketDownload || "paglaot-ticket.png").replace(/\.png$/i, "");
+      const fileName = guestCount > 1 ? `${baseName}-guest-${i + 1}.png` : `${baseName}.png`;
+
+      // Small delay between downloads so the browser doesn't block them
+      await new Promise((resolve) => setTimeout(resolve, i * 200));
+
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = fileName;
+      link.click();
+    }
   }
 
   if (ticketDownload) {
