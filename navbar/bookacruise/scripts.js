@@ -408,6 +408,66 @@ document.addEventListener("DOMContentLoaded", () => {
     paymentMethodSelect.addEventListener("change", updatePaymentFields);
     updatePaymentFields();
   }
+  // --- GCash Number validation (11 digits, starts with 09) ---
+  const gcashNumberInput = document.getElementById("gcashNumberInput");
+  const gcashNumberError = document.getElementById("gcashNumberError");
+
+  function validateGcashNumber() {
+    if (!gcashNumberInput || !gcashNumberError) return true;
+    const val = gcashNumberInput.value;
+    const isValid = /^09[0-9]{9}$/.test(val);
+    gcashNumberError.style.display = isValid ? "none" : "block";
+    gcashNumberInput.classList.toggle("input-error", !isValid);
+    return isValid;
+  }
+
+  if (gcashNumberInput) {
+    gcashNumberInput.addEventListener("input", () => {
+      let v = gcashNumberInput.value.replace(/\D/g, "");
+      // Auto-prepend 09 if user starts typing a digit other than 0, or just 0
+      if (v.length > 0 && v[0] !== "0") v = "0" + v;
+      if (v.length > 1 && v[1] !== "9") v = v[0] + "9" + v.substring(2);
+      gcashNumberInput.value = v.slice(0, 11);
+      validateGcashNumber();
+    });
+    gcashNumberInput.addEventListener("blur", () => {
+      if (gcashNumberInput.disabled === false) validateGcashNumber();
+    });
+  }
+
+  // --- Maya Number validation (11 digits, starts with 09) ---
+  const mayaNumberInput = document.getElementById("mayaNumberInput");
+  const mayaNumberError = document.getElementById("mayaNumberError");
+
+  function validateMayaNumber() {
+    if (!mayaNumberInput || !mayaNumberError) return true;
+    const val = mayaNumberInput.value;
+    const isValid = /^09[0-9]{9}$/.test(val);
+    mayaNumberError.style.display = isValid ? "none" : "block";
+    mayaNumberInput.classList.toggle("input-error", !isValid);
+    return isValid;
+  }
+
+  if (mayaNumberInput) {
+    mayaNumberInput.addEventListener("input", () => {
+      let v = mayaNumberInput.value.replace(/\D/g, "");
+      if (v.length > 0 && v[0] !== "0") v = "0" + v;
+      if (v.length > 1 && v[1] !== "9") v = v[0] + "9" + v.substring(2);
+      mayaNumberInput.value = v.slice(0, 11);
+      validateMayaNumber();
+    });
+    mayaNumberInput.addEventListener("blur", () => {
+      if (mayaNumberInput.disabled === false) validateMayaNumber();
+    });
+  }
+
+  // Re-validate when method changes
+  if (paymentMethodSelect) {
+    paymentMethodSelect.addEventListener("change", () => {
+      if (paymentMethodSelect.value === "GCash") setTimeout(validateGcashNumber, 50);
+      if (paymentMethodSelect.value === "Maya") setTimeout(validateMayaNumber, 50);
+    });
+  }
   // --- Maya Reference Number validation (12 alphanumeric) ---
   const mayaRefInput = document.getElementById("mayaReferenceInput");
   const mayaRefError = document.getElementById("mayaRefError");

@@ -524,7 +524,16 @@ include_once "navbar/bookacruise/booking-data.php";
                         </div>
                         <div class="pay-inline-field">
                             <label>GCash Number</label>
-                            <input type="tel" name="gcash_number" placeholder="09XX XXX XXXX" pattern="09[0-9]{9}" disabled>
+                            <input type="tel" name="gcash_number" id="gcashNumberInput"
+                                   placeholder="09XX XXX XXXX"
+                                   maxlength="11"
+                                   inputmode="numeric"
+                                   pattern="09[0-9]{9}"
+                                   title="Must be 11 digits starting with 09"
+                                   disabled>
+                            <small id="gcashNumberError" class="pay-field-error" style="display:none;">
+                                
+                            </small>
                         </div>
                         <div class="pay-inline-field">
                             <label>Reference No.</label>
@@ -548,7 +557,16 @@ include_once "navbar/bookacruise/booking-data.php";
                         </div>
                         <div class="pay-inline-field">
                             <label>Maya Number</label>
-                            <input type="tel" name="maya_number" placeholder="09XX XXX XXXX" pattern="09[0-9]{9}" disabled>
+                            <input type="tel" name="maya_number" id="mayaNumberInput"
+                                   placeholder="09XX XXX XXXX"
+                                   maxlength="11"
+                                   inputmode="numeric"
+                                   pattern="09[0-9]{9}"
+                                   title="Must be 11 digits starting with 09"
+                                   disabled>
+                            <small id="mayaNumberError" class="pay-field-error" style="display:none;">
+                                Invalid format. Must be 11 digits starting with 09.
+                            </small>
                         </div>
                         <div class="pay-inline-field">
                             <label>Reference No.</label>

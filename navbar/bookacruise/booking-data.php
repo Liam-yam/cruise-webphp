@@ -289,6 +289,12 @@ $pendingBooking = $_SESSION["pending_booking"] ?? null;
   private function getPaymentReference($paymentMethod) {
     switch ($paymentMethod) {
       case "GCash":
+        $num = preg_replace("/\D/", "", $_POST["gcash_number"] ?? "");
+        if (!preg_match('/^09[0-9]{9}$/', $num)) {
+          $_SESSION["payment_error"] = "Invalid GCash number. It must be 11 digits starting with 09.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
         $ref = $this->cleanText($_POST["gcash_reference"] ?? "");
         if (!preg_match('/^[0-9]{13}$/', $ref)) {
           $_SESSION["payment_error"] = "Invalid GCash reference number. It must be exactly 13 digits.";
@@ -297,6 +303,12 @@ $pendingBooking = $_SESSION["pending_booking"] ?? null;
         }
         return $ref;
       case "Maya":
+        $num = preg_replace("/\D/", "", $_POST["maya_number"] ?? "");
+        if (!preg_match('/^09[0-9]{9}$/', $num)) {
+          $_SESSION["payment_error"] = "Invalid Maya number. It must be 11 digits starting with 09.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
         $ref = $this->cleanText($_POST["maya_reference"] ?? "");
         if (!preg_match('/^[A-Za-z0-9]{12}$/', $ref)) {
           $_SESSION["payment_error"] = "Invalid Maya reference number. It must be exactly 12 alphanumeric characters.";
