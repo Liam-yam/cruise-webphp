@@ -408,6 +408,136 @@ document.addEventListener("DOMContentLoaded", () => {
     paymentMethodSelect.addEventListener("change", updatePaymentFields);
     updatePaymentFields();
   }
+  // --- Maya Reference Number validation (12 alphanumeric) ---
+  const mayaRefInput = document.getElementById("mayaReferenceInput");
+  const mayaRefError = document.getElementById("mayaRefError");
+
+  function validateMayaRef() {
+    if (!mayaRefInput || !mayaRefError) return true;
+    const val = mayaRefInput.value;
+    const isValid = /^[A-Za-z0-9]{12}$/.test(val);
+    mayaRefError.style.display = isValid ? "none" : "block";
+    mayaRefInput.classList.toggle("input-error", !isValid);
+    return isValid;
+  }
+
+  if (mayaRefInput) {
+    mayaRefInput.addEventListener("input", () => {
+      mayaRefInput.value = mayaRefInput.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
+      validateMayaRef();
+    });
+    mayaRefInput.addEventListener("blur", () => {
+      if (mayaRefInput.disabled === false) validateMayaRef();
+    });
+    if (paymentMethodSelect) {
+      paymentMethodSelect.addEventListener("change", () => {
+        if (paymentMethodSelect.value === "Maya") {
+          setTimeout(validateMayaRef, 50);
+        }
+      });
+    }
+  }
+
+  // --- BPI Card validation (matches Mastercard format) ---
+  const bpiCardNumber = document.querySelector('input[name="bpi_card_number"]');
+  const bpiCardExpiry = document.querySelector('input[name="bpi_card_expiry"]');
+  const bpiCardCvv = document.querySelector('input[name="bpi_card_cvv"]');
+
+  function validateBpiCard() {
+    let ok = true;
+    if (bpiCardNumber && !bpiCardNumber.disabled) {
+      const digits = bpiCardNumber.value.replace(/\D/g, "");
+      const valid = digits.length >= 13 && digits.length <= 19;
+      bpiCardNumber.classList.toggle("input-error", !valid);
+      if (!valid) ok = false;
+    }
+    if (bpiCardExpiry && !bpiCardExpiry.disabled) {
+      const valid = /^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(bpiCardExpiry.value);
+      bpiCardExpiry.classList.toggle("input-error", !valid);
+      if (!valid) ok = false;
+    }
+    if (bpiCardCvv && !bpiCardCvv.disabled) {
+      const valid = /^[0-9]{3,4}$/.test(bpiCardCvv.value);
+      bpiCardCvv.classList.toggle("input-error", !valid);
+      if (!valid) ok = false;
+    }
+    return ok;
+  }
+
+  if (bpiCardNumber) {
+    bpiCardNumber.addEventListener("input", () => {
+      bpiCardNumber.value = bpiCardNumber.value.replace(/\D/g, "").slice(0, 19);
+      validateBpiCard();
+    });
+    bpiCardExpiry.addEventListener("input", validateBpiCard);
+    bpiCardCvv.addEventListener("input", () => {
+      bpiCardCvv.value = bpiCardCvv.value.replace(/\D/g, "").slice(0, 4);
+      validateBpiCard();
+    });
+  }
+
+  // Block form submit for Maya / BPI invalid input
+  if (form) {
+    form.addEventListener("submit", event => {
+      const m = paymentMethodSelect ? paymentMethodSelect.value : "";
+      if (m === "Maya" && !validateMayaRef()) {
+        event.preventDefault();
+        alert("Invalid Maya reference number. It must be exactly 12 alphanumeric characters.");
+        if (mayaRefInput) mayaRefInput.focus();
+      } else if (m === "BPI" && !validateBpiCard()) {
+        event.preventDefault();
+        alert("Please complete all BPI card fields correctly (card number, expiry MM/YY, CVV).");
+        if (bpiCardNumber) bpiCardNumber.focus();
+      }
+    });
+  }
+  // --- GCash Reference Number validation (must be after paymentMethodSelect is defined) ---
+  const gcashRefInput = document.getElementById("gcashReferenceInput");
+  const gcashRefError = document.getElementById("gcashRefError");
+
+  function validateGcashRef() {
+    if (!gcashRefInput || !gcashRefError) return true;
+    const val = gcashRefInput.value;
+    const isValid = /^[0-9]{13}$/.test(val);
+    gcashRefError.style.display = isValid ? "none" : "block";
+    gcashRefInput.classList.toggle("input-error", !isValid);
+    return isValid;
+  }
+
+  if (gcashRefInput) {
+    // Live: strip non-digits as the user types
+    gcashRefInput.addEventListener("input", () => {
+      gcashRefInput.value = gcashRefInput.value.replace(/\D/g, "").slice(0, 13);
+      validateGcashRef();
+    });
+
+    // Blur: show error immediately when leaving the field
+    gcashRefInput.addEventListener("blur", () => {
+      if (gcashRefInput.disabled === false) validateGcashRef();
+    });
+
+    // Re-validate when GCash is selected as the payment method
+    if (paymentMethodSelect) {
+      paymentMethodSelect.addEventListener("change", () => {
+        if (paymentMethodSelect.value === "GCash") {
+          setTimeout(validateGcashRef, 50);
+        }
+      });
+    }
+  }
+
+  // Block form submit if GCash reference is invalid
+  if (form) {
+    form.addEventListener("submit", event => {
+      if (paymentMethodSelect && paymentMethodSelect.value === "GCash") {
+        if (!validateGcashRef()) {
+          event.preventDefault();
+          alert("Invalid GCash reference number. It must be exactly 13 digits.");
+          if (gcashRefInput) gcashRefInput.focus();
+        }
+      }
+    });
+  }
 
   const ticketBackdrop = document.getElementById("ticketBackdrop");
   const paidTicket = document.getElementById("paidTicket");

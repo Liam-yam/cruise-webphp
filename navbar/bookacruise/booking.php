@@ -528,7 +528,16 @@ include_once "navbar/bookacruise/booking-data.php";
                         </div>
                         <div class="pay-inline-field">
                             <label>Reference No.</label>
-                            <input type="text" name="gcash_reference" placeholder="GCash receipt/reference" disabled>
+                            <input type="text" name="gcash_reference" id="gcashReferenceInput"
+                                   placeholder="GCash receipt/reference (13 digits)"
+                                   maxlength="13"
+                                   inputmode="numeric"
+                                   pattern="[0-9]{13}"
+                                   title="Reference number must be exactly 13 digits"
+                                   disabled>
+                            <small id="gcashRefError" class="pay-field-error" style="display:none;">
+                                
+                            </small>
                         </div>
                     </div>
 
@@ -543,7 +552,15 @@ include_once "navbar/bookacruise/booking-data.php";
                         </div>
                         <div class="pay-inline-field">
                             <label>Reference No.</label>
-                            <input type="text" name="maya_reference" placeholder="Maya receipt/reference" disabled>
+                            <input type="text" name="maya_reference" id="mayaReferenceInput"
+                                   placeholder="Maya receipt/reference (12 alphanumeric)"
+                                   maxlength="12"
+                                   pattern="[A-Za-z0-9]{12}"
+                                   title="Reference number must be exactly 12 alphanumeric characters"
+                                   disabled>
+                            <small id="mayaRefError" class="pay-field-error" style="display:none;">
+                                
+                            </small>
                         </div>
                     </div>
 
@@ -566,16 +583,18 @@ include_once "navbar/bookacruise/booking-data.php";
 
                     <div class="pay-method-fields hidden" data-payment-fields="BPI">
                         <div class="pay-inline-field">
-                            <label>Account Name</label>
-                            <input type="text" name="bpi_account_name" placeholder="BPI account name" disabled>
+                            <label>Cardholder</label>
+                            <input type="text" name="bpi_card_name" placeholder="Name on card" disabled>
                         </div>
                         <div class="pay-inline-field">
-                            <label>Account No.</label>
-                            <input type="text" name="bpi_account_number" placeholder="BPI account number" inputmode="numeric" disabled>
+                            <label>Card Number</label>
+                            <input type="text" name="bpi_card_number" placeholder="XXXX XXXX XXXX XXXX" inputmode="numeric" minlength="13" maxlength="19" disabled>
                         </div>
-                        <div class="pay-inline-field">
-                            <label>Transfer Ref.</label>
-                            <input type="text" name="bpi_reference" placeholder="Bank transfer reference" disabled>
+                        <div class="pay-inline-field pay-card-short-fields">
+                            <label>Expiry</label>
+                            <input type="text" name="bpi_card_expiry" placeholder="MM/YY" pattern="(0[1-9]|1[0-2])\/[0-9]{2}" disabled>
+                            <label>CVV</label>
+                            <input type="password" name="bpi_card_cvv" placeholder="XXX" pattern="[0-9]{3,4}" maxlength="4" disabled>
                         </div>
                     </div>
                 </div>

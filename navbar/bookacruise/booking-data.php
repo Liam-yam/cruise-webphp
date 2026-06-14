@@ -289,11 +289,39 @@ $pendingBooking = $_SESSION["pending_booking"] ?? null;
   private function getPaymentReference($paymentMethod) {
     switch ($paymentMethod) {
       case "GCash":
-        return $this->cleanText($_POST["gcash_reference"] ?? "");
+        $ref = $this->cleanText($_POST["gcash_reference"] ?? "");
+        if (!preg_match('/^[0-9]{13}$/', $ref)) {
+          $_SESSION["payment_error"] = "Invalid GCash reference number. It must be exactly 13 digits.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
+        return $ref;
       case "Maya":
-        return $this->cleanText($_POST["maya_reference"] ?? "");
+        $ref = $this->cleanText($_POST["maya_reference"] ?? "");
+        if (!preg_match('/^[A-Za-z0-9]{12}$/', $ref)) {
+          $_SESSION["payment_error"] = "Invalid Maya reference number. It must be exactly 12 alphanumeric characters.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
+        return $ref;
       case "BPI":
-        return $this->cleanText($_POST["bpi_reference"] ?? "");
+        $cardNumber = preg_replace("/\D/", "", $_POST["bpi_card_number"] ?? "");
+        if (strlen($cardNumber) < 13 || strlen($cardNumber) > 19) {
+          $_SESSION["payment_error"] = "Invalid BPI card number. It must be between 13 and 19 digits.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
+        if (!preg_match('/^(0[1-9]|1[0-2])\/[0-9]{2}$/', $_POST["bpi_card_expiry"] ?? "")) {
+          $_SESSION["payment_error"] = "Invalid BPI card expiry. Use MM/YY format.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
+        if (!preg_match('/^[0-9]{3,4}$/', $_POST["bpi_card_cvv"] ?? "")) {
+          $_SESSION["payment_error"] = "Invalid BPI CVV. It must be 3 or 4 digits.";
+          header("Location: booking.php?pay_error=1");
+          exit();
+        }
+        return strlen($cardNumber) >= 4 ? "Card ending " . substr($cardNumber, -4) : "";
       case "Visa":
       case "Mastercard":
       case "JCB":
