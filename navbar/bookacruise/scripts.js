@@ -695,7 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
     context.fillText(text, x, y);
   }
 
-  async function drawSingleTicket(data, seatSuffix, guestLabel) {
+  async function drawSingleTicket(data, seatSuffix, guestLabel, orderNumber) {
     const canvas = document.createElement("canvas");
     canvas.width = 1203;
     canvas.height = 487;
@@ -752,8 +752,8 @@ document.addEventListener("DOMContentLoaded", () => {
     drawTextField(context, "From", data.ticketFrom, 780, 282, 160);
     drawTextField(context, "To", data.ticketTo, 990, 282, 150);
 
-    // Per-guest seat number: append suffix to distinguish seats
-    const seatNumber = data.ticketRoom + seatSuffix;
+    // All guests in one booking share the same room; the unique identifier is the order number
+    const seatNumber = data.ticketRoom;
     context.fillStyle = "#3b3b3b";
     context.font = "22px Arial";
     context.fillText("Room Number:", 780, 382);
@@ -771,7 +771,7 @@ document.addEventListener("DOMContentLoaded", () => {
     context.font = "18px Arial";
     context.fillText(`Date and Time Issued: ${data.ticketIssued}`, 780, 414);
     context.fillText(`Departure Date: ${data.ticketDeparture}`, 780, 444);
-    context.fillText(`Order Number: ${data.ticketOrder}`, 780, 474);
+    context.fillText(`Order Number: ${orderNumber}`, 780, 474);
 
     // Guest label (e.g. "Guest 2 of 3") drawn in the photo area
     if (guestLabel) {
@@ -796,9 +796,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Seat suffixes: first ticket keeps the original room, extras get -2, -3, etc.
     const seatSuffixes = ["", ...Array.from({ length: guestCount - 1 }, (_, i) => `-${i + 2}`)];
 
+    // Parse the base order number (e.g. "ORD-00001") and zero-pad width to reuse the format
+    const orderMatch = String(data.ticketOrder || "").match(/^([A-Za-z-]*)(\d+)$/);
+    const orderPrefix = orderMatch ? orderMatch[1] : "ORD-";
+    const orderPad = orderMatch ? orderMatch[2].length : 5;
+    const orderBaseNum = orderMatch ? parseInt(orderMatch[2], 10) : 0;
+
     for (let i = 0; i < guestCount; i++) {
       const guestLabel = guestCount > 1 ? `Guest ${i + 1} of ${guestCount}` : null;
-      const canvas = await drawSingleTicket(data, seatSuffixes[i], guestLabel);
+      // Each guest gets a unique, sequential order number (ORD-00001, ORD-00002, ...)
+      const orderNumber = `${orderPrefix}${String(orderBaseNum + i).padStart(orderPad, "0")}`;
+      const canvas = await drawSingleTicket(data, seatSuffixes[i], guestLabel, orderNumber);
       const baseName = (data.ticketDownload || "paglaot-ticket.png").replace(/\.png$/i, "");
       const fileName = guestCount > 1 ? `${baseName}-guest-${i + 1}.png` : `${baseName}.png`;
 
