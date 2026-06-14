@@ -298,7 +298,7 @@ $navLinks = [
 
             <div style="display:flex; align-items:center; gap:12px;">
 
-                <a href="../profile/profile.php" style="text-decoration:none; color:inherit;">
+                <a href="profile/profile.php" style="text-decoration:none; color:inherit;">
 
                 <div style="
                     display:flex;
@@ -342,13 +342,13 @@ $navLinks = [
 
                 </a>
 
-                <a href="../logout.php" class="btn-signin">Log Out</a>
+                <a href="logout.php" class="btn-signin">Log Out</a>
 
             </div>
 
         <?php else: ?>
 
-            <a href="../login.php" class="btn-signin">Sign In</a>
+            <a href="login.php" class="btn-signin">Sign In</a>
 
         <?php endif; ?>
 
