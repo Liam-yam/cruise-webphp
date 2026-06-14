@@ -295,10 +295,62 @@ $navLinks = [
       </ul>
 
                         <?php if (isset($_SESSION['user'])): ?>
-        <a href="../logout.php" class="btn-signin">Log Out</a>
-      <?php else: ?>
-        <a href="../login.php" class="btn-signin">Sign In</a>
-      <?php endif; ?>
+
+            <div style="display:flex; align-items:center; gap:12px;">
+
+                <a href="../profile/profile.php" style="text-decoration:none; color:inherit;">
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                    background:rgba(255,255,255,0.08);
+                    padding:8px 14px;
+                    border-radius:30px;
+                    border:1px solid rgba(255,255,255,0.15);
+                    cursor:pointer;
+                ">
+
+                    <div style="
+                        width:34px;
+                        height:34px;
+                        border-radius:50%;
+                        background:#67B5D1;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        color:white;
+                        font-weight:700;
+                        font-size:.9rem;
+                    ">
+                        <?php echo strtoupper(substr($_SESSION['user'], 0, 1)); ?>
+                    </div>
+
+                    <span style="
+                        color:white;
+                        font-size:.88rem;
+                        font-weight:500;
+                        max-width:120px;
+                        overflow:hidden;
+                        text-overflow:ellipsis;
+                        white-space:nowrap;
+                    ">
+                        <?php echo $_SESSION['user']; ?>
+                    </span>
+
+                </div>
+
+                </a>
+
+                <a href="../logout.php" class="btn-signin">Log Out</a>
+
+            </div>
+
+        <?php else: ?>
+
+            <a href="../login.php" class="btn-signin">Sign In</a>
+
+        <?php endif; ?>
 
       <button class="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
