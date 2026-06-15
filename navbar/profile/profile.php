@@ -15,7 +15,13 @@ $userEmail = $_SESSION['user_email'] ?? '';
 $userInitial = strtoupper(substr($userName, 0, 1));
 
 if (empty($userEmail)) {
-    $emailStmt = $conn->prepare('SELECT email FROM users WHERE full_name = ? LIMIT 1');
+    $emailStmt = $conn->prepare(
+        'SELECT r.email
+           FROM tbl_registration r
+           JOIN tbl_user u ON u.user_id = r.user_id
+          WHERE TRIM(CONCAT(u.fname, " ", u.lname)) = ?
+          LIMIT 1'
+    );
 
     if ($emailStmt) {
         $emailStmt->bind_param('s', $userName);
@@ -93,16 +99,28 @@ function formatTicketRow($row) {
 
 function fetchTickets($conn, $userEmail, $userName, $history = false) {
     $dateCondition = $history
-        ? "(b.status = 'completed' OR b.departure_date < CURDATE())"
-        : "(b.status = 'paid' AND b.departure_date >= CURDATE())";
+        ? "(b.status = 'completed' OR t.departure_date < CURDATE())"
+        : "(b.status = 'paid' AND t.departure_date >= CURDATE())";
 
-    $sql = "SELECT b.order_no, b.user_name, b.cruise_ship, b.trip_date, b.departure_date, b.tier,
-                   b.adults, b.children, b.total_price, b.status, p.payment_method, p.paid_at
-            FROM booking b
-            INNER JOIN payment p ON p.order_no = b.order_no
-            WHERE (b.user_email = ? OR (b.user_email = '' AND b.user_name = ?))
-              AND $dateCondition
-            ORDER BY b.departure_date " . ($history ? "DESC" : "ASC");
+    $sql = "SELECT b.order_no, b.adults, b.children, b.total_price, b.status,
+                   b.created_at AS paid_at,
+                   b.group_tag,
+                   t.cruise_ship, t.ticket_tier AS tier, t.departure_date,
+                   t.room_no,
+                   p.payment_method,
+                   TRIM(CONCAT(u.fname, ' ', u.lname)) AS user_name
+              FROM tbl_booking b
+              JOIN tbl_user u          ON u.user_id = b.user_id
+              JOIN tbl_registration r  ON r.user_id = u.user_id
+              JOIN tbl_ticket t        ON t.ticket_no = b.ticket_no
+              LEFT JOIN tbl_payment p  ON p.order_no = (
+                     SELECT MIN(b2.order_no)
+                       FROM tbl_booking b2
+                      WHERE b2.group_tag = b.group_tag
+                 )
+             WHERE r.email = ?
+               AND $dateCondition
+             ORDER BY t.departure_date " . ($history ? "DESC" : "ASC");
 
     $stmt = $conn->prepare($sql);
 
@@ -110,13 +128,14 @@ function fetchTickets($conn, $userEmail, $userName, $history = false) {
         return null;
     }
 
-    $stmt->bind_param('ss', $userEmail, $userName);
+    $stmt->bind_param('s', $userEmail);
     $stmt->execute();
 
     $tickets = [];
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
+        $row['trip_date'] = $row['departure_date'];
         $tickets[] = formatTicketRow($row);
     }
 

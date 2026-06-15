@@ -162,9 +162,10 @@ class BookingData {
     return ($adults * $adultPrice) + ($children * $childPrice);
   }
 
-  public function getDepartureDate($tripDate) {
-    $tripStartText = trim(explode("-", $tripDate)[0]) . ", 2026";
-    $timestamp = strtotime($tripStartText);
+    public function getDepartureDate($tripDate) {
+    $parts = array_map("trim", explode("-", $tripDate));
+    $tripEndText = end($parts) . ", 2026";
+    $timestamp = strtotime($tripEndText);
 
     return $timestamp ? date("Y-m-d", $timestamp) : null;
   }
@@ -174,6 +175,55 @@ class BookingData {
       header("Location: ../login.php");
       exit();
     }
+  }
+
+    private function resolveUserId($conn) {
+    $userEmail = $_SESSION["user_email"] ?? "";
+
+    if (empty($userEmail)) {
+      return null;
+    }
+
+    $stmt = $conn->prepare(
+      "SELECT u.user_id
+         FROM tbl_user u
+         JOIN tbl_registration r ON r.user_id = u.user_id
+        WHERE r.email = ?
+        LIMIT 1"
+    );
+
+    if (!$stmt) {
+      return null;
+    }
+
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    return $row ? (int) $row["user_id"] : null;
+  }
+
+  private function resolveTicketId($conn, $ship, $tier, $departureDate) {
+    $stmt = $conn->prepare(
+      "SELECT ticket_no
+         FROM tbl_ticket
+        WHERE cruise_ship = ?
+          AND ticket_tier = ?
+          AND departure_date = ?
+        LIMIT 1"
+    );
+
+    if (!$stmt) {
+      return null;
+    }
+
+    $stmt->bind_param("sss", $ship, $tier, $departureDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    return $row ? (int) $row["ticket_no"] : null;
   }
 
   private function handlePayment() {
@@ -186,9 +236,10 @@ class BookingData {
     $this->requireLogin();
 
     if ($_SERVER["REQUEST_METHOD"] === "GET") {
-    unset($_SESSION["pending_booking"]);
-}
-$pendingBooking = $_SESSION["pending_booking"] ?? null;
+      unset($_SESSION["pending_booking"]);
+    }
+
+    $pendingBooking = $_SESSION["pending_booking"] ?? null;
 
     if (empty($pendingBooking)) {
       $this->bookingMessage = "Please complete the booking form before payment.";
@@ -196,28 +247,42 @@ $pendingBooking = $_SESSION["pending_booking"] ?? null;
     }
 
     $paymentMethod = $this->cleanText($_POST["payment_method"] ?? "");
-    $payerName = $this->cleanText($_POST["payer_name"] ?? "");
     $paymentReference = $this->getPaymentReference($paymentMethod);
 
-    if (empty($paymentMethod) || empty($payerName) || empty($paymentReference)) {
+    if (empty($paymentMethod) || empty($paymentReference)) {
       $this->bookingMessage = "Please complete the payment details.";
       return true;
     }
 
-    $userName = $_SESSION["user"];
-    $userEmail = $_SESSION["user_email"] ?? "";
-    $status = "paid";
+    $userId = $this->resolveUserId($conn);
 
-    $bookingStmt = $conn->prepare(
-      "INSERT INTO booking
-        (user_name, user_email, cruise_ship, trip_date, departure_date, tier, adults, children, total_price, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    if (!$userId) {
+      $this->bookingMessage = "Your account is not linked to a user record. Please contact support.";
+      return true;
+    }
+
+    $ticketId = $this->resolveTicketId(
+      $conn,
+      $pendingBooking["ship"],
+      $pendingBooking["tier"],
+      $pendingBooking["departure_date"]
     );
 
+    if (!$ticketId) {
+      $this->bookingMessage = "No ticket is configured for the selected ship, tier, and date.";
+      return true;
+    }
+
+    $status = "paid";
+
+        $bookingStmt = $conn->prepare(
+          "INSERT INTO tbl_booking (user_id, ticket_no, adults, children, total_price, status, group_tag)
+           VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
+
     $paymentStmt = $conn->prepare(
-      "INSERT INTO payment
-        (order_no, payment_method, payer_name, payment_reference, amount_paid)
-       VALUES (?, ?, ?, ?, ?)"
+      "INSERT INTO tbl_payment (order_no, payment_method, ref_no, amount_paid, paid_date, paid_time)
+       VALUES (?, ?, ?, ?, ?, ?)"
     );
 
     if (!$bookingStmt || !$paymentStmt) {
@@ -225,37 +290,69 @@ $pendingBooking = $_SESSION["pending_booking"] ?? null;
       return true;
     }
 
-    $bookingStmt->bind_param(
-      "ssssssiids",
-      $userName,
-      $userEmail,
-      $pendingBooking["ship"],
-      $pendingBooking["trip_date"],
-      $pendingBooking["departure_date"],
-      $pendingBooking["tier"],
-      $pendingBooking["adults"],
-      $pendingBooking["children"],
-      $pendingBooking["total"],
-      $status
-    );
+    $adults = (int) $pendingBooking["adults"];
+    $children = (int) $pendingBooking["children"];
+    $total = (float) $pendingBooking["total"];
+    $paidDate = date("Y-m-d");
+    $paidTime = date("H:i:s");
 
-    $conn->begin_transaction();
-
-    if (!$bookingStmt->execute()) {
-      $conn->rollback();
-      $this->bookingMessage = "Booking failed. Please try again.";
+    $guestCount = $adults + $children;
+    if ($guestCount < 1) {
+      $this->bookingMessage = "Please include at least one guest.";
       return true;
     }
 
-    $orderNo = $conn->insert_id;
+    $adultPrice = isset($this->tierPrices[$pendingBooking["tier"]])
+      ? (float) $this->tierPrices[$pendingBooking["tier"]]
+      : 0;
+    $childPrice = $adultPrice * 0.5;
+    $pricePerAdult = $adultPrice;
+    $pricePerChild = $childPrice;
+
+        $conn->begin_transaction();
+
+    $firstOrderNo = null;
+    $orderNumbers = [];
+    $groupTag = "GRP-" . date("Ymd") . "-" . bin2hex(random_bytes(3));
+
+    for ($i = 0; $i < $guestCount; $i++) {
+      $isChild = ($i >= $adults);
+      $guestAdults = $isChild ? 0 : 1;
+      $guestChildren = $isChild ? 1 : 0;
+      $guestTotal = $isChild ? $pricePerChild : $pricePerAdult;
+
+      $bookingStmt->bind_param(
+        "iiiidss",
+        $userId,
+        $ticketId,
+        $guestAdults,
+        $guestChildren,
+        $guestTotal,
+        $status,
+        $groupTag
+      );
+
+      if (!$bookingStmt->execute()) {
+        $conn->rollback();
+        $this->bookingMessage = "Booking failed. Please try again.";
+        return true;
+      }
+
+      $orderNo = $conn->insert_id;
+      $orderNumbers[] = $orderNo;
+      if ($firstOrderNo === null) {
+        $firstOrderNo = $orderNo;
+      }
+    }
 
     $paymentStmt->bind_param(
-      "isssd",
-      $orderNo,
+      "isdsss",
+      $firstOrderNo,
       $paymentMethod,
-      $payerName,
       $paymentReference,
-      $pendingBooking["total"]
+      $total,
+      $paidDate,
+      $paidTime
     );
 
     if (!$paymentStmt->execute()) {
@@ -267,18 +364,21 @@ $pendingBooking = $_SESSION["pending_booking"] ?? null;
     $conn->commit();
 
     $_SESSION["paid_ticket"] = [
-      "order_no" => $orderNo,
-      "user_name" => $userName,
-      "user_email" => $userEmail,
-      "ship" => $pendingBooking["ship"],
-      "trip_date" => $pendingBooking["trip_date"],
-      "departure_date" => $pendingBooking["departure_date"],
-      "tier" => $pendingBooking["tier"],
-      "adults" => $pendingBooking["adults"],
-      "children" => $pendingBooking["children"],
-      "total" => $pendingBooking["total"],
-      "payment_method" => $paymentMethod,
-      "issued_at" => date("Y-m-d H:i:s")
+      "order_no"        => $firstOrderNo,
+      "order_numbers"   => $orderNumbers,
+      "user_id"         => $userId,
+      "ticket_no"       => $ticketId,
+      "user_name"       => $_SESSION["user"],
+      "user_email"      => $_SESSION["user_email"] ?? "",
+      "ship"            => $pendingBooking["ship"],
+      "trip_date"       => $pendingBooking["trip_date"],
+      "departure_date"  => $pendingBooking["departure_date"],
+      "tier"            => $pendingBooking["tier"],
+      "adults"          => $adults,
+      "children"        => $children,
+      "total"           => $total,
+      "payment_method"  => $paymentMethod,
+      "issued_at"       => $paidDate . " " . $paidTime
     ];
 
     unset($_SESSION["pending_booking"]);

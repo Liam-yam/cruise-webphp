@@ -20,21 +20,25 @@ $message = "";
 
 if (isset($_POST['register'])) {
 
-    $fullName = trim($_POST['full_name']);
+    $firstName = trim($_POST['first_name']);
+    $lastName  = trim($_POST['last_name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirmPassword = $_POST['confirm_password'];
 
-    if ($password !== $confirmPassword) {
+    if ($firstName === '' || $lastName === '') {
+
+        $message = "Please enter your first and last name.";
+
+    } elseif ($password !== $confirmPassword) {
 
         $message = "Passwords do not match.";
 
     } else {
 
-        $check = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $check = $conn->prepare("SELECT r.reg_no FROM tbl_registration r WHERE r.email = ?");
         $check->bind_param("s", $email);
         $check->execute();
-
         $result = $check->get_result();
 
         if ($result->num_rows > 0) {
@@ -43,22 +47,33 @@ if (isset($_POST['register'])) {
 
         } else {
 
-            $stmt = $conn->prepare("INSERT INTO users(full_name, email, password) VALUES(?,?,?)");
-            $stmt->bind_param("sss", $fullName, $email, $password);
+            $conn->begin_transaction();
 
-            if ($stmt->execute()) {
+            try {
 
-    setcookie("login_timer", "", time() - 3600, "/");
+                $stmtUser = $conn->prepare("INSERT INTO tbl_user(fname, lname) VALUES(?, ?)");
+                $stmtUser->bind_param("ss", $firstName, $lastName);
+                $stmtUser->execute();
+                $newUserId = $conn->insert_id;
 
-    $_SESSION['user'] = $fullName;
-    $_SESSION['user_email'] = $email;
-    $_SESSION['user_id'] = $conn->insert_id;
+                $stmtReg = $conn->prepare("INSERT INTO tbl_registration(email, password, user_id) VALUES(?, ?, ?)");
+                $stmtReg->bind_param("ssi", $email, $password, $newUserId);
+                $stmtReg->execute();
 
-    header("Location: ../index.php");
-    exit();
+                $conn->commit();
 
-            } else {
+                setcookie("login_timer", "", time() - 3600, "/");
 
+                $_SESSION['user']       = trim($firstName . ' ' . $lastName);
+                $_SESSION['user_email'] = $email;
+                $_SESSION['user_id']    = $newUserId;
+
+                header("Location: ../index.php");
+                exit();
+
+            } catch (Exception $e) {
+
+                $conn->rollback();
                 $message = "Something went wrong.";
 
             }
@@ -71,7 +86,13 @@ if (isset($_POST['login'])) {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt = $conn->prepare(
+        "SELECT r.reg_no, r.email, r.password, r.user_id,
+                u.fname, u.lname
+           FROM tbl_registration r
+           JOIN tbl_user u ON u.user_id = r.user_id
+          WHERE r.email = ?"
+    );
     $stmt->bind_param("s", $email);
     $stmt->execute();
 
@@ -83,15 +104,16 @@ if (isset($_POST['login'])) {
 
         if ($password === $user['password']) {
 
-    setcookie("login_timer", "", time() - 3600, "/");
+            setcookie("login_timer", "", time() - 3600, "/");
 
-    $_SESSION['user'] = $user['full_name'];
-    $_SESSION['user_email'] = $user['email'];
-    $_SESSION['user_id'] = $user['id'] ?? null;
+            $_SESSION['user']       = trim(($user['fname'] ?? '') . ' ' . ($user['lname'] ?? ''));
+            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_id']    = $user['user_id'] ?? null;
 
-    header("Location: ../index.php");
-    exit();
-} else {
+            header("Location: ../index.php");
+            exit();
+
+        } else {
 
             $message = "Incorrect password.";
 
@@ -193,6 +215,15 @@ body{
 
 .form-group{
     margin-bottom:16px;
+}
+
+.form-row{
+    display:flex;
+    gap:12px;
+}
+
+.form-row .form-group{
+    flex:1;
 }
 
 .form-group label{
@@ -499,9 +530,16 @@ window.onload = function(){
 
         </div>
 
-        <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" name="full_name" required>
+                <div class="form-row">
+            <div class="form-group">
+                <label>First Name</label>
+                <input type="text" name="first_name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" name="last_name" required>
+            </div>
         </div>
 
         <div class="form-group">
