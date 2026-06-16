@@ -103,7 +103,7 @@ function fetchTickets($conn, $userEmail, $userName, $history = false) {
         : "(b.status = 'paid' AND t.departure_date >= CURDATE())";
 
     $sql = "SELECT b.order_no, b.adults, b.children, b.total_price, b.status,
-                   b.created_at AS paid_at,
+                   COALESCE(CONCAT(p.paid_date, ' ', p.paid_time), NOW()) AS paid_at,
                    b.group_tag,
                    t.cruise_ship, t.ticket_tier AS tier, t.departure_date,
                    t.room_no,
