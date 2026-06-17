@@ -1,10 +1,4 @@
-/* ═══════════════════════════════════════════════
-   Paglaot Admin — style.css
-   Design language: crisp white, slate type, single
-   indigo accent. Every element earns its presence.
-═══════════════════════════════════════════════ */
 
-/* ── Tokens ────────────────────────────────── */
 :root {
     --bg:           #ffffff;
     --bg-soft:      #f8f9fb;
@@ -15,9 +9,9 @@
     --text-secondary:#6b7280;
     --text-muted:   #9ca3af;
 
-    --accent:       #4f46e5;          /* indigo-600 */
-    --accent-light: #eef2ff;          /* indigo-50  */
-    --accent-hover: #4338ca;          /* indigo-700 */
+    --accent:       #4f46e5;
+    --accent-light: #eef2ff;
+    --accent-hover: #4338ca;
 
     --danger:       #ef4444;
     --danger-light: #fef2f2;
@@ -37,7 +31,6 @@
     --transition: 150ms ease;
 }
 
-/* ── Reset ─────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 14px; }
 body {
@@ -50,7 +43,6 @@ a { text-decoration: none; color: inherit; }
 img { display: block; max-width: 100%; }
 button { cursor: pointer; font-family: inherit; border: none; background: none; }
 
-/* ── Top Bar ────────────────────────────────── */
 .topbar {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -69,14 +61,12 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 .topbar__right { display: flex; align-items: center; gap: 14px; }
 .topbar__welcome { font-size: .85rem; color: var(--text-secondary); }
 
-/* ── Layout ─────────────────────────────────── */
 .layout {
     display: flex;
     padding-top: var(--topbar-h);
     min-height: 100vh;
 }
 
-/* ── Sidebar ────────────────────────────────── */
 .sidebar {
     width: var(--sidebar-w);
     flex-shrink: 0;
@@ -110,7 +100,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 .sidebar__link--danger { color: var(--danger); margin-top: 12px; }
 .sidebar__link--danger:hover { background: var(--danger-light); }
 
-/* ── Main content ───────────────────────────── */
 .main {
     flex: 1;
     margin-left: var(--sidebar-w);
@@ -118,7 +107,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
     max-width: 1200px;
 }
 
-/* ── Page header ────────────────────────────── */
 .page-header {
     display: flex;
     align-items: flex-start;
@@ -142,7 +130,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
     line-height: 1.6;
 }
 
-/* ── Stat cards ─────────────────────────────── */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -185,7 +172,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 .stat-card__badge--up      { background: var(--success-light); color: var(--success); }
 .stat-card__badge--neutral { background: var(--bg-soft); color: var(--text-secondary); }
 
-/* ── Panel ──────────────────────────────────── */
 .panel {
     background: var(--bg);
     border: 1px solid var(--border);
@@ -211,7 +197,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
     color: var(--text-secondary);
 }
 
-/* ── Deal filters ───────────────────────────── */
 .deal-filters {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -219,7 +204,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
     padding: 20px 24px;
 }
 
-/* ── Inputs ─────────────────────────────────── */
 .input {
     width: 100%;
     padding: 9px 12px;
@@ -242,7 +226,6 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 }
 select.input { cursor: pointer; }
 
-/* ── Buttons ────────────────────────────────── */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -282,7 +265,6 @@ select.input { cursor: pointer; }
 
 .btn--sm { padding: 6px 12px; font-size: .8rem; }
 
-/* ── Table ──────────────────────────────────── */
 .table-wrap { overflow-x: auto; }
 .table {
     width: 100%;
@@ -321,7 +303,6 @@ select.input { cursor: pointer; }
 .table__price  { font-variant-numeric: tabular-nums; }
 .table__actions { display: flex; gap: 6px; }
 
-/* ── Status badges ──────────────────────────── */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -369,7 +350,6 @@ select.input { cursor: pointer; }
     background: var(--bg-soft);
 }
 
-/* ── Modals ─────────────────────────────────── */
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -428,7 +408,6 @@ select.input { cursor: pointer; }
     border-top: 1px solid var(--border);
 }
 
-/* ── Form grid ──────────────────────────────── */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -443,7 +422,6 @@ select.input { cursor: pointer; }
     color: var(--text-secondary);
 }
 
-/* ── Toast ──────────────────────────────────── */
 .toast {
     position: fixed;
     bottom: 28px;
@@ -469,7 +447,6 @@ select.input { cursor: pointer; }
 .toast--success { background: #064e3b; }
 .toast--danger  { background: #7f1d1d; }
 
-/* ── Responsive ─────────────────────────────── */
 @media (max-width: 900px) {
     .stats-grid    { grid-template-columns: 1fr 1fr; }
     .deal-filters  { grid-template-columns: 1fr 1fr; }
