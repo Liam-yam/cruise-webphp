@@ -59,65 +59,36 @@ document.addEventListener("DOMContentLoaded", () => {
     "December"
   ];
 
-  const tripDates = {
-    Tropical: [
-      "June 2 - June 6, 2026",
-      "June 16 - June 20, 2026",
-      "June 30 - July 4, 2026",
-      "July 14 - July 18, 2026"
-    ],
-    "Lost Cities": [
-      "June 12 - June 16, 2026",
-      "June 26 - June 30, 2026",
-      "July 10 - July 14, 2026",
-      "July 24 - July 28, 2026"
-    ],
-    Masquerade: [
-      "June 7 - June 11, 2026",
-      "June 23 - June 27, 2026",
-      "July 9 - July 13, 2026",
-      "July 25 - July 29, 2026"
-    ]
-  };
+  const bookingDataNode = document.getElementById("booking-data");
+  let bookingPayload = { schedules: [], tiers: [] };
 
-  const shipClasses = {
-    Tropical: "trip-tropical",
-    Masquerade: "trip-masquerade",
-    "Lost Cities": "trip-lost-cities"
-  };
-
-  const tierPrices = {
-    PREMIUM: 32879,
-    "ELITE LUX": 37987,
-    ROYALTY: 49879
-  };
-
-  let calYear = 2026;
-  let calMonth = 5;
-  let selectedTrip = null;
-
-  function parseTripRange(ship, label) {
-    const [startPart, endPartWithYear] = label.split(" - ");
-    const [endPart, yearPart] = endPartWithYear.split(", ");
-    const year = Number(yearPart);
-    const [startMonthName, startDayText] = startPart.split(" ");
-    const endPieces = endPart.split(" ");
-    const endMonthName = endPieces.length === 2 ? endPieces[0] : startMonthName;
-    const endDayText = endPieces.length === 2 ? endPieces[1] : endPieces[0];
-    const startMonth = monthNames.indexOf(startMonthName);
-    const endMonth = monthNames.indexOf(endMonthName);
-
-    return {
-      ship,
-      label,
-      startDate: new Date(year, startMonth, Number(startDayText)),
-      endDate: new Date(year, endMonth, Number(endDayText))
-    };
+  try {
+    bookingPayload = bookingDataNode ? JSON.parse(bookingDataNode.textContent || "{}") : { schedules: [], tiers: [] };
+  } catch (error) {
+    bookingPayload = { schedules: [], tiers: [] };
   }
 
-  const trips = Object.entries(tripDates).flatMap(([ship, dates]) =>
-    dates.map(date => parseTripRange(ship, date))
-  );
+  const bookingRows = Array.isArray(bookingPayload.schedules) ? bookingPayload.schedules : [];
+  const tierRows = Array.isArray(bookingPayload.tiers) ? bookingPayload.tiers : [];
+
+  const shipClasses = {};
+  const classNames = ["trip-tropical", "trip-masquerade", "trip-lost-cities"];
+  [...new Set(bookingRows.map(row => row.ship))].forEach((ship, index) => {
+    shipClasses[ship] = classNames[index % classNames.length];
+  });
+
+  const firstScheduleDate = bookingRows.length > 0 ? new Date(`${bookingRows[0].arrival_date}T00:00:00`) : new Date();
+  let calYear = firstScheduleDate.getFullYear();
+  let calMonth = firstScheduleDate.getMonth();
+  let selectedTrip = null;
+
+  const trips = bookingRows.map(row => ({
+    ticketNo: Number(row.ticket_no),
+    ship: row.ship,
+    label: row.trip_label,
+    startDate: new Date(`${row.arrival_date}T00:00:00`),
+    endDate: new Date(`${row.departure_date}T00:00:00`)
+  }));
 
   function formatPeso(amount) {
     return `\u20b1${amount.toLocaleString("en-PH")}`;
@@ -132,10 +103,19 @@ document.addEventListener("DOMContentLoaded", () => {
   function tripsForDay(date) {
     const selectedShip = cruiseShip.value;
 
-    return trips.filter(trip => {
+    const matchingTrips = trips.filter(trip => {
       const matchesShip = !selectedShip || trip.ship === selectedShip;
       return matchesShip && date >= trip.startDate && date <= trip.endDate;
     });
+
+    const uniqueTrips = [];
+    matchingTrips.forEach(trip => {
+      if (!uniqueTrips.some(item => item.ship === trip.ship && item.label === trip.label)) {
+        uniqueTrips.push(trip);
+      }
+    });
+
+    return uniqueTrips;
   }
 
   function renderCalendar() {
@@ -250,6 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     closeCalendar();
     renderCalendar();
+    updateTierOptions();
     updateTotal();
   }
 
@@ -258,6 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tripDate.value = "";
     dateDisplay.textContent = "Select Date";
     dateDisplay.classList.remove("selected");
+    updateTierOptions();
   }
 
   function changeMonth(delta) {
@@ -280,19 +262,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const tier = tierSelect.value;
     const adults = Number(adultCount.value);
     const children = Number(childCount.value);
+    const selectedTier = tierRows.find(row => row.tier_name === tier);
 
-    if (!tier) {
+    if (!tier || !selectedTier) {
       totalPrice.textContent = "\u20b10";
       totalPriceInput.value = "0";
       return;
     }
 
-    const adultPrice = tierPrices[tier];
+    const adultPrice = Number(selectedTier.base_price);
     const childPrice = adultPrice * 0.5;
     const total = adults * adultPrice + children * childPrice;
 
     totalPrice.textContent = formatPeso(total);
     totalPriceInput.value = total;
+  }
+
+  function updateTierOptions() {
+    if (!tierSelect) {
+      return;
+    }
+
+    const currentTier = tierSelect.value;
+    const tiers = tierRows.map(row => row.tier_name);
+
+    tierSelect.innerHTML = '<option value="">Select Tier</option>';
+    tiers.forEach(tier => {
+      const option = document.createElement("option");
+      option.value = tier;
+      option.textContent = tier;
+      if (tier === currentTier) {
+        option.selected = true;
+      }
+      tierSelect.appendChild(option);
+    });
+
+    if (!tiers.includes(currentTier)) {
+      tierSelect.value = "";
+    }
   }
 
   if (dateCard && calendarPopup) {
@@ -328,6 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cruiseShip.addEventListener("change", () => {
       resetSelectedDate();
       renderCalendar();
+      updateTierOptions();
       updateTotal();
     });
 
@@ -366,6 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderCalendar();
+  updateTierOptions();
   updateTotal();
 
   const paymentModal = document.getElementById("payBackdrop");

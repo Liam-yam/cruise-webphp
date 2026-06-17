@@ -99,13 +99,13 @@ function formatTicketRow($row) {
 
 function fetchTickets($conn, $userEmail, $userName, $history = false) {
     $dateCondition = $history
-        ? "(b.status = 'completed' OR t.departure_date < CURDATE())"
-        : "(b.status = 'paid' AND t.departure_date >= CURDATE())";
+        ? "b.status = 'completed'"
+        : "b.status = 'paid'";
 
     $sql = "SELECT b.order_no, b.adults, b.children, b.total_price, b.status,
                    COALESCE(CONCAT(p.paid_date, ' ', p.paid_time), NOW()) AS paid_at,
                    b.group_tag,
-                   t.cruise_ship, t.ticket_tier AS tier, t.departure_date,
+                   t.cruise_ship, COALESCE(tr.tier_name, t.ticket_tier) AS tier, t.departure_date,
                    t.room_no,
                    p.payment_method,
                    TRIM(CONCAT(u.fname, ' ', u.lname)) AS user_name
@@ -113,6 +113,7 @@ function fetchTickets($conn, $userEmail, $userName, $history = false) {
               JOIN tbl_user u          ON u.user_id = b.user_id
               JOIN tbl_registration r  ON r.user_id = u.user_id
               JOIN tbl_ticket t        ON t.ticket_no = b.ticket_no
+              LEFT JOIN tbl_tier tr     ON tr.tier_id = b.tier_id
               LEFT JOIN tbl_payment p  ON p.order_no = (
                      SELECT MIN(b2.order_no)
                        FROM tbl_booking b2

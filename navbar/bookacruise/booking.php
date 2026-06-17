@@ -14,6 +14,7 @@ include_once "navbar/bookacruise/booking-data.php";
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script id="booking-data" type="application/json"><?php echo $bookingJson ?: "[]"; ?></script>
     <script src="scripts.js" defer></script>
 </head>
 
@@ -363,12 +364,25 @@ include_once "navbar/bookacruise/booking-data.php";
     <?php
     $packageNumber = 0;
 
+    if (empty($packages)):
+?>
+    <article class="package package-premium">
+        <div class="package-info">
+            <h2>No active cruises</h2>
+            <ul>
+                <li>Please check again once an admin adds or reactivates a cruise schedule.</li>
+            </ul>
+        </div>
+    </article>
+<?php
+    endif;
+
     foreach ($packages as $tier => $package):
 
         $packageNumber++;
 
-        $price = $tierPrices[$tier];
-        $promoPrice = $promoPrices[$tier];
+        $price = $tierPrices[$tier] ?? 0;
+        $promoPrice = $promoPrices[$tier] ?? null;
 
         $isLastPackage =
             $packageNumber == count($packages);
@@ -418,17 +432,19 @@ include_once "navbar/bookacruise/booking-data.php";
                 <small>PHP</small>
             </p>
 
-            <strong>
-                PROMO PRICE FOR 2!!
-            </strong>
+            <?php if ($promoPrice !== null): ?>
+                <strong>
+                    PROMO PRICE
+                </strong>
 
-            <p class="promo-price">
+                <p class="promo-price">
 
-                <?php echo formatPeso($promoPrice); ?>
+                    <?php echo formatPeso($promoPrice); ?>
 
-                <small>PHP</small>
+                    <small>PHP</small>
 
-            </p>
+                </p>
+            <?php endif; ?>
 
         </div>
 

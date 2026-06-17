@@ -2,128 +2,43 @@
 require_once dirname(__DIR__, 2) . "/db.php";
 
 class BookingData {
-  public $siteName;
-  public $tagline;
-  public $pageTitle;
-  public $activePage;
-  public $bookingMessage;
+  public $siteName = "Paglaot";
+  public $tagline = "Pearl of the Orient Sea";
+  public $pageTitle = "Book Cruise";
+  public $activePage = "Book a Cruise";
+  public $bookingMessage = "";
 
   public $navLinks;
-  public $ships;
-  public $tripDates;
-  public $tierPrices;
-  public $promoPrices;
-  public $packages;
+  public $ships = [];
+  public $tripDates = [];
+  public $tierPrices = [];
+  public $promoPrices = [];
+  public $packages = [];
+  public $bookingSchedule = [];
+  public $bookingJson = "{}";
 
-  public $selectedShip;
-  public $selectedTier;
+  public $selectedShip = "";
+  public $selectedTier = "";
+
+  private $activeSchedules = [];
+  private $activeTiers = [];
 
   public function __construct() {
-    $this->siteName = "Paglaot";
-    $this->tagline = "Pearl of the Orient Sea";
-    $this->pageTitle = "Book Cruise";
-    $this->activePage = "Book a Cruise";
-    $this->bookingMessage = "";
-
-        $this->navLinks = [
+    $this->navLinks = [
       "Our Ships" => "../ourships/LostCities.php",
       "Book a Cruise" => "booking.php",
       "Destinations" => "../destination/destination.php",
       "About" => "../../navbar/about.php"
     ];
 
-    $this->ships = ["Tropical", "Lost Cities", "Masquerade"];
-
-    $this->tripDates = [
-      "Tropical" => [
-        "June 2 - June 6, 2026",
-        "June 16 - June 20, 2026",
-        "June 30 - July 4, 2026",
-        "July 14 - July 18, 2026"
-      ],
-      "Lost Cities" => [
-        "June 12 - June 16, 2026",
-        "June 26 - June 30, 2026",
-        "July 10 - July 14, 2026",
-        "July 24 - July 28, 2026"
-      ],
-      "Masquerade" => [
-        "June 7 - June 11, 2026",
-        "June 23 - June 27, 2026",
-        "July 9 - July 13, 2026",
-        "July 25 - July 29, 2026"
-      ]
-    ];
-
-    $this->tierPrices = [
-      "PREMIUM" => 32879,
-      "ELITE LUX" => 37987,
-      "ROYALTY" => 49879
-    ];
-
-    $this->promoPrices = [
-      "PREMIUM" => 60684,
-      "ELITE LUX" => 72584,
-      "ROYALTY" => 95684
-    ];
-
-    $this->packages = [
-      "PREMIUM" => [
-        "grade" => "B",
-        "class" => "package-premium",
-        "image" => "assets/premium.png",
-        "alt" => "Premium cabin",
-        "features" => [
-          "Comfortable interior or basic ocean-view cabin",
-          "Access to main dining & buffet",
-          "Complimentary non-alcoholic drinks",
-          "Access to pool, gym, and shows",
-          "Daily housekeeping",
-          "Basic onboard activities"
-        ]
-      ],
-      "ELITE LUX" => [
-        "grade" => "A",
-        "class" => "package-elite",
-        "image" => "assets/elite.png",
-        "alt" => "Elite lux cabin",
-        "features" => [
-          "Spacious ocean-view cabin (better location)",
-          "Priority check-in & boarding",
-          "Access to all premium dining",
-          "Complimentary drinks (selected alcoholic included)",
-          "Free Wi-Fi (standard)",
-          "Spa discounts & wellness access",
-          "Pool Access",
-          "Reserved seating for shows",
-          "Room service (limited)"
-        ]
-      ],
-      "ROYALTY" => [
-        "grade" => "S",
-        "class" => "package-royalty",
-        "image" => "assets/royalty.png",
-        "alt" => "Royalty suite cabin",
-        "features" => [
-          "Luxury suite with balcony",
-          "VIP priority boarding & exit",
-          "Personal butler / concierge",
-          "Unlimited premium dining",
-          "Unlimited drinks (premium alcohol included)",
-          "High-speed Wi-Fi",
-          "Private lounges, pool & deck",
-          "Complimentary spa treatments",
-          "VIP seating for shows",
-          "Private excursions",
-          "24/7 room service"
-        ]
-      ]
-    ];
+    $this->activeSchedules = $this->loadActiveSchedules();
+    $this->activeTiers = $this->loadActiveTiers();
+    $this->buildBookingOptions();
 
     $this->selectedShip = $this->cleanText($_GET["ship"] ?? "");
     $this->selectedTier = $this->cleanText($_GET["tier"] ?? "");
 
-    if (!array_key_exists($this->selectedShip, $this->tripDates)) {
+    if (!in_array($this->selectedShip, $this->ships, true)) {
       $this->selectedShip = "";
     }
 
@@ -139,35 +54,202 @@ class BookingData {
   }
 
   public function formatPeso($amount) {
-    return "&#8369;" . number_format($amount);
+    return "&#8369;" . number_format((float) $amount);
   }
 
   public function getTierLabel($tier) {
-    switch ($tier) {
-      case "PREMIUM":
-        return "Premium Cabin";
-      case "ELITE LUX":
-        return "Elite Lux Cabin";
-      case "ROYALTY":
-        return "Royalty Suite";
-      default:
-        return "Cruise Cabin";
-    }
+    return $tier . " Cabin";
   }
 
   public function getBookingTotal($tier, $adults, $children) {
-    $adultPrice = $this->tierPrices[$tier];
-    $childPrice = $adultPrice * 0.5;
-
-    return ($adults * $adultPrice) + ($children * $childPrice);
+    $adultPrice = (float) ($this->tierPrices[$tier] ?? 0);
+    return ($adults * $adultPrice) + ($children * ($adultPrice * 0.5));
   }
 
-    public function getDepartureDate($tripDate) {
-    $parts = array_map("trim", explode("-", $tripDate));
-    $tripEndText = end($parts) . ", 2026";
-    $timestamp = strtotime($tripEndText);
+  private function loadActiveSchedules() {
+    global $conn;
 
-    return $timestamp ? date("Y-m-d", $timestamp) : null;
+    $result = $conn->query(
+      "SELECT ticket_no, cruise_ship, itinerary, arrival_date, departure_date, room_no
+         FROM tbl_ticket
+        WHERE status = 'active'
+        ORDER BY cruise_ship, arrival_date"
+    );
+
+    if (!$result) {
+      $this->bookingMessage = "Cruise schedules are not ready yet.";
+      return [];
+    }
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+      $row["trip_label"] = $this->formatTripLabel($row["arrival_date"], $row["departure_date"]);
+      $rows[] = $row;
+    }
+
+    return $rows;
+  }
+
+  private function loadActiveTiers() {
+    global $conn;
+
+    $result = $conn->query(
+      "SELECT tier_id, tier_name, base_price, promo_price
+         FROM tbl_tier
+        WHERE status = 'active'
+        ORDER BY tier_id"
+    );
+
+    if (!$result) {
+      $this->bookingMessage = "Tier prices are not ready yet.";
+      return [];
+    }
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+      $rows[] = $row;
+    }
+
+    return $rows;
+  }
+
+  private function buildBookingOptions() {
+    foreach ($this->activeSchedules as $schedule) {
+      $ship = $schedule["cruise_ship"];
+      $label = $schedule["trip_label"];
+
+      if (!in_array($ship, $this->ships, true)) {
+        $this->ships[] = $ship;
+      }
+
+      if (!isset($this->tripDates[$ship])) {
+        $this->tripDates[$ship] = [];
+      }
+
+      if (!in_array($label, $this->tripDates[$ship], true)) {
+        $this->tripDates[$ship][] = $label;
+      }
+
+      $this->bookingSchedule[] = [
+        "ticket_no" => (int) $schedule["ticket_no"],
+        "ship" => $ship,
+        "itinerary" => $schedule["itinerary"],
+        "trip_label" => $label,
+        "arrival_date" => $schedule["arrival_date"],
+        "departure_date" => $schedule["departure_date"],
+        "room_no" => $schedule["room_no"]
+      ];
+    }
+
+    foreach ($this->activeTiers as $tier) {
+      $tierName = $tier["tier_name"];
+      $this->tierPrices[$tierName] = (float) $tier["base_price"];
+      if ($tier["promo_price"] !== null) {
+        $this->promoPrices[$tierName] = (float) $tier["promo_price"];
+      }
+    }
+
+    sort($this->ships);
+    $this->packages = $this->buildPackages(array_keys($this->tierPrices));
+    $this->bookingJson = json_encode([
+      "schedules" => $this->bookingSchedule,
+      "tiers" => array_map(function ($tier) {
+        return [
+          "tier_id" => (int) $tier["tier_id"],
+          "tier_name" => $tier["tier_name"],
+          "base_price" => (float) $tier["base_price"],
+          "promo_price" => $tier["promo_price"] === null ? null : (float) $tier["promo_price"]
+        ];
+      }, $this->activeTiers)
+    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+  }
+
+  private function buildPackages($tiers) {
+    $templates = [
+      "Premium" => [
+        "grade" => "B",
+        "class" => "package-premium",
+        "image" => "assets/premium.png",
+        "alt" => "Premium cabin",
+        "features" => [
+          "Comfortable interior or basic ocean-view cabin",
+          "Access to main dining & buffet",
+          "Complimentary non-alcoholic drinks",
+          "Access to pool, gym, and shows",
+          "Daily housekeeping",
+          "Basic onboard activities"
+        ]
+      ],
+      "Elite" => [
+        "grade" => "A",
+        "class" => "package-elite",
+        "image" => "assets/elite.png",
+        "alt" => "Elite cabin",
+        "features" => [
+          "Spacious ocean-view cabin",
+          "Priority check-in & boarding",
+          "Access to premium dining",
+          "Complimentary drinks",
+          "Standard Wi-Fi",
+          "Reserved seating for shows"
+        ]
+      ],
+      "Ultimate" => [
+        "grade" => "S",
+        "class" => "package-royalty",
+        "image" => "assets/royalty.png",
+        "alt" => "Ultimate suite cabin",
+        "features" => [
+          "Luxury suite with balcony",
+          "VIP priority boarding & exit",
+          "Personal concierge",
+          "Unlimited premium dining",
+          "High-speed Wi-Fi",
+          "24/7 room service"
+        ]
+      ]
+    ];
+
+    $packages = [];
+    $fallbackImages = ["assets/premium.png", "assets/elite.png", "assets/royalty.png"];
+    $index = 0;
+
+    foreach ($tiers as $tier) {
+      $packages[$tier] = $templates[$tier] ?? [
+        "grade" => chr(66 + ($index % 3)),
+        "class" => "package-premium",
+        "image" => $fallbackImages[$index % count($fallbackImages)],
+        "alt" => strtolower($tier) . " cabin",
+        "features" => [
+          "Cruise cabin assigned by schedule",
+          "Dining and onboard activity access",
+          "Daily housekeeping",
+          "Standard guest support"
+        ]
+      ];
+      $index++;
+    }
+
+    return $packages;
+  }
+
+  private function formatTripLabel($arrivalDate, $departureDate) {
+    $arrival = strtotime($arrivalDate);
+    $departure = strtotime($departureDate);
+
+    if (!$arrival || !$departure) {
+      return "";
+    }
+
+    if (date("Y-m", $arrival) === date("Y-m", $departure)) {
+      return date("F j", $arrival) . " - " . date("j, Y", $departure);
+    }
+
+    if (date("Y", $arrival) === date("Y", $departure)) {
+      return date("F j", $arrival) . " - " . date("F j, Y", $departure);
+    }
+
+    return date("F j, Y", $arrival) . " - " . date("F j, Y", $departure);
   }
 
   private function requireLogin() {
@@ -177,10 +259,9 @@ class BookingData {
     }
   }
 
-    private function resolveUserId($conn) {
+  private function resolveUserId($conn) {
     $userEmail = $_SESSION["user_email"] ?? "";
-
-    if (empty($userEmail)) {
+    if ($userEmail === "") {
       return null;
     }
 
@@ -198,32 +279,28 @@ class BookingData {
 
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-
+    $row = $stmt->get_result()->fetch_assoc();
     return $row ? (int) $row["user_id"] : null;
   }
 
-  private function resolveTicketId($conn, $ship, $tier, $departureDate) {
-    $stmt = $conn->prepare(
-      "SELECT ticket_no
-         FROM tbl_ticket
-        WHERE cruise_ship = ?
-          AND ticket_tier = ?
-          AND departure_date = ?
-        LIMIT 1"
-    );
-
-    if (!$stmt) {
-      return null;
+  private function findSchedule($ship, $tripDate) {
+    foreach ($this->activeSchedules as $schedule) {
+      if ($schedule["cruise_ship"] === $ship && $schedule["trip_label"] === $tripDate) {
+        return $schedule;
+      }
     }
 
-    $stmt->bind_param("sss", $ship, $tier, $departureDate);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    return null;
+  }
 
-    return $row ? (int) $row["ticket_no"] : null;
+  private function findTier($tierName) {
+    foreach ($this->activeTiers as $tier) {
+      if ($tier["tier_name"] === $tierName) {
+        return $tier;
+      }
+    }
+
+    return null;
   }
 
   private function handlePayment() {
@@ -234,11 +311,6 @@ class BookingData {
     }
 
     $this->requireLogin();
-
-    if ($_SERVER["REQUEST_METHOD"] === "GET") {
-      unset($_SESSION["pending_booking"]);
-    }
-
     $pendingBooking = $_SESSION["pending_booking"] ?? null;
 
     if (empty($pendingBooking)) {
@@ -249,37 +321,24 @@ class BookingData {
     $paymentMethod = $this->cleanText($_POST["payment_method"] ?? "");
     $paymentReference = $this->getPaymentReference($paymentMethod);
 
-    if (empty($paymentMethod) || empty($paymentReference)) {
+    if ($paymentMethod === "" || $paymentReference === "") {
       $this->bookingMessage = "Please complete the payment details.";
       return true;
     }
 
     $userId = $this->resolveUserId($conn);
+    $schedule = $this->findSchedule($pendingBooking["ship"], $pendingBooking["trip_date"]);
+    $tier = $this->findTier($pendingBooking["tier"]);
 
-    if (!$userId) {
-      $this->bookingMessage = "Your account is not linked to a user record. Please contact support.";
+    if (!$userId || !$schedule || !$tier) {
+      $this->bookingMessage = "This cruise selection is no longer available.";
       return true;
     }
 
-    $ticketId = $this->resolveTicketId(
-      $conn,
-      $pendingBooking["ship"],
-      $pendingBooking["tier"],
-      $pendingBooking["departure_date"]
+    $bookingStmt = $conn->prepare(
+      "INSERT INTO tbl_booking (user_id, ticket_no, tier_id, adults, children, total_price, status, group_tag)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
-
-    if (!$ticketId) {
-      $this->bookingMessage = "No ticket is configured for the selected ship, tier, and date.";
-      return true;
-    }
-
-    $status = "paid";
-
-        $bookingStmt = $conn->prepare(
-          "INSERT INTO tbl_booking (user_id, ticket_no, adults, children, total_price, status, group_tag)
-           VALUES (?, ?, ?, ?, ?, ?, ?)"
-        );
-
     $paymentStmt = $conn->prepare(
       "INSERT INTO tbl_payment (order_no, payment_method, ref_no, amount_paid, paid_date, paid_time)
        VALUES (?, ?, ?, ?, ?, ?)"
@@ -293,38 +352,31 @@ class BookingData {
     $adults = (int) $pendingBooking["adults"];
     $children = (int) $pendingBooking["children"];
     $total = (float) $pendingBooking["total"];
+    $adultPrice = (float) $tier["base_price"];
+    $childPrice = $adultPrice * 0.5;
+    $guestCount = $adults + $children;
+    $status = "paid";
     $paidDate = date("Y-m-d");
     $paidTime = date("H:i:s");
-
-    $guestCount = $adults + $children;
-    if ($guestCount < 1) {
-      $this->bookingMessage = "Please include at least one guest.";
-      return true;
-    }
-
-    $adultPrice = isset($this->tierPrices[$pendingBooking["tier"]])
-      ? (float) $this->tierPrices[$pendingBooking["tier"]]
-      : 0;
-    $childPrice = $adultPrice * 0.5;
-    $pricePerAdult = $adultPrice;
-    $pricePerChild = $childPrice;
-
-        $conn->begin_transaction();
-
+    $groupTag = "GRP-" . date("Ymd") . "-" . bin2hex(random_bytes(3));
     $firstOrderNo = null;
     $orderNumbers = [];
-    $groupTag = "GRP-" . date("Ymd") . "-" . bin2hex(random_bytes(3));
+
+    $conn->begin_transaction();
 
     for ($i = 0; $i < $guestCount; $i++) {
       $isChild = ($i >= $adults);
       $guestAdults = $isChild ? 0 : 1;
       $guestChildren = $isChild ? 1 : 0;
-      $guestTotal = $isChild ? $pricePerChild : $pricePerAdult;
+      $guestTotal = $isChild ? $childPrice : $adultPrice;
+      $ticketNo = (int) $schedule["ticket_no"];
+      $tierId = (int) $tier["tier_id"];
 
       $bookingStmt->bind_param(
-        "iiiidss",
+        "iiiiidss",
         $userId,
-        $ticketId,
+        $ticketNo,
+        $tierId,
         $guestAdults,
         $guestChildren,
         $guestTotal,
@@ -345,15 +397,7 @@ class BookingData {
       }
     }
 
-    $paymentStmt->bind_param(
-      "isdsss",
-      $firstOrderNo,
-      $paymentMethod,
-      $paymentReference,
-      $total,
-      $paidDate,
-      $paidTime
-    );
+    $paymentStmt->bind_param("issdss", $firstOrderNo, $paymentMethod, $paymentReference, $total, $paidDate, $paidTime);
 
     if (!$paymentStmt->execute()) {
       $conn->rollback();
@@ -364,21 +408,22 @@ class BookingData {
     $conn->commit();
 
     $_SESSION["paid_ticket"] = [
-      "order_no"        => $firstOrderNo,
-      "order_numbers"   => $orderNumbers,
-      "user_id"         => $userId,
-      "ticket_no"       => $ticketId,
-      "user_name"       => $_SESSION["user"],
-      "user_email"      => $_SESSION["user_email"] ?? "",
-      "ship"            => $pendingBooking["ship"],
-      "trip_date"       => $pendingBooking["trip_date"],
-      "departure_date"  => $pendingBooking["departure_date"],
-      "tier"            => $pendingBooking["tier"],
-      "adults"          => $adults,
-      "children"        => $children,
-      "total"           => $total,
-      "payment_method"  => $paymentMethod,
-      "issued_at"       => $paidDate . " " . $paidTime
+      "order_no" => $firstOrderNo,
+      "order_numbers" => $orderNumbers,
+      "user_id" => $userId,
+      "ticket_no" => (int) $schedule["ticket_no"],
+      "tier_id" => (int) $tier["tier_id"],
+      "user_name" => $_SESSION["user"],
+      "user_email" => $_SESSION["user_email"] ?? "",
+      "ship" => $pendingBooking["ship"],
+      "trip_date" => $pendingBooking["trip_date"],
+      "departure_date" => $schedule["departure_date"],
+      "tier" => $pendingBooking["tier"],
+      "adults" => $adults,
+      "children" => $children,
+      "total" => $total,
+      "payment_method" => $paymentMethod,
+      "issued_at" => $paidDate . " " . $paidTime
     ];
 
     unset($_SESSION["pending_booking"]);
@@ -423,17 +468,7 @@ class BookingData {
           header("Location: booking.php?pay_error=1");
           exit();
         }
-        if (!preg_match('/^(0[1-9]|1[0-2])\/[0-9]{2}$/', $_POST["bpi_card_expiry"] ?? "")) {
-          $_SESSION["payment_error"] = "Invalid BPI card expiry. Use MM/YY format.";
-          header("Location: booking.php?pay_error=1");
-          exit();
-        }
-        if (!preg_match('/^[0-9]{3,4}$/', $_POST["bpi_card_cvv"] ?? "")) {
-          $_SESSION["payment_error"] = "Invalid BPI CVV. It must be 3 or 4 digits.";
-          header("Location: booking.php?pay_error=1");
-          exit();
-        }
-        return strlen($cardNumber) >= 4 ? "Card ending " . substr($cardNumber, -4) : "";
+        return "Card ending " . substr($cardNumber, -4);
       case "Visa":
       case "Mastercard":
       case "JCB":
@@ -445,7 +480,7 @@ class BookingData {
   }
 
   private function handleBooking() {
-    if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
       return;
     }
 
@@ -460,25 +495,24 @@ class BookingData {
     $postedTier = $this->cleanText($_POST["tier"] ?? "");
     $adults = $this->cleanText($_POST["adults"] ?? "1");
     $children = $this->cleanText($_POST["children"] ?? "0");
+    $schedule = $this->findSchedule($postedShip, $postedDate);
+    $tier = $this->findTier($postedTier);
 
-    if (empty($postedShip) || empty($postedDate) || empty($postedTier)) {
+    if ($postedShip === "" || $postedDate === "" || $postedTier === "") {
       $this->bookingMessage = "Please complete the booking form first.";
     } elseif (!is_numeric($adults) || !is_numeric($children)) {
       $this->bookingMessage = "Guest count must be numeric.";
-    } elseif (!array_key_exists($postedShip, $this->tripDates) || !in_array($postedDate, $this->tripDates[$postedShip])) {
-      $this->bookingMessage = "Please choose a valid cruise date.";
-    } elseif (!array_key_exists($postedTier, $this->tierPrices)) {
-      $this->bookingMessage = "Please choose a valid tier.";
+    } elseif (!$schedule || !$tier) {
+      $this->bookingMessage = "Please choose an available ship, date, and tier.";
     } else {
       $adults = (int) $adults;
       $children = (int) $children;
       $total = $this->getBookingTotal($postedTier, $adults, $children);
-      $departureDate = $this->getDepartureDate($postedDate);
 
       $_SESSION["pending_booking"] = [
         "ship" => $postedShip,
         "trip_date" => $postedDate,
-        "departure_date" => $departureDate,
+        "departure_date" => $schedule["departure_date"],
         "tier" => $postedTier,
         "adults" => $adults,
         "children" => $children,
@@ -497,14 +531,13 @@ $tagline = $booking->tagline;
 $pageTitle = $booking->pageTitle;
 $activePage = $booking->activePage;
 $bookingMessage = $booking->bookingMessage;
-
 $navLinks = $booking->navLinks;
 $ships = $booking->ships;
 $tripDates = $booking->tripDates;
 $tierPrices = $booking->tierPrices;
 $promoPrices = $booking->promoPrices;
 $packages = $booking->packages;
-
+$bookingJson = $booking->bookingJson;
 $selectedShip = $booking->selectedShip;
 $selectedTier = $booking->selectedTier;
 $pendingBooking = $_SESSION["pending_booking"] ?? null;
