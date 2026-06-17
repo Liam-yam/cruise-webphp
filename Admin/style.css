@@ -232,6 +232,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
     outline: none;
     transition: border-color var(--transition), box-shadow var(--transition);
     -webkit-appearance: none;
+    appearance: none;
 }
 .input::placeholder { color: var(--text-muted); }
 .input:hover  { border-color: var(--border-hover); }
