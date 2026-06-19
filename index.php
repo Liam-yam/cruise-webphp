@@ -284,8 +284,8 @@
 
     <?php 
     $shipLinks = [
-      'Tropical'   => 'tropical.php',
-      'Masquerade' => 'masquerade.php',
+      'Tropical'   => 'navbar/ourships/LostCities.php',
+      'Masquerade' => 'navbar/ourships/LostCities.php',
       'Lost City'  => 'navbar/ourships/LostCities.php',
     ];
     ?>
