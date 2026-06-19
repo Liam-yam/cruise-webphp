@@ -62,7 +62,7 @@ document.getElementById("openAddTierBtn")?.addEventListener("click", () => {
 
 document.getElementById("scheduleTable")?.addEventListener("click", event => {
   const editButton = event.target.closest(".edit-schedule-btn");
-  const deleteButton = event.target.closest(".delete-schedule-btn");
+  const ArchiveButton = event.target.closest(".Archive-schedule-btn");
 
   if (editButton) {
     const data = editButton.closest("tr").dataset;
@@ -78,17 +78,17 @@ document.getElementById("scheduleTable")?.addEventListener("click", event => {
     openModal("scheduleModal");
   }
 
-  if (deleteButton) {
-    const data = deleteButton.closest("tr").dataset;
-    document.getElementById("delete-schedule-id").value = data.ticketNo || "";
-    document.getElementById("delete-schedule-name").textContent = `${data.ship || "Ship"} (${data.departure || "date"})`;
-    openModal("deleteScheduleModal");
+  if (ArchiveButton) {
+    const data = ArchiveButton.closest("tr").dataset;
+    document.getElementById("Archive-schedule-id").value = data.ticketNo || "";
+    document.getElementById("Archive-schedule-name").textContent = `${data.ship || "Ship"} (${data.departure || "date"})`;
+    openModal("ArchiveScheduleModal");
   }
 });
 
 document.getElementById("tierTable")?.addEventListener("click", event => {
   const editButton = event.target.closest(".edit-tier-btn");
-  const deleteButton = event.target.closest(".delete-tier-btn");
+  const ArchiveButton = event.target.closest(".Archive-tier-btn");
 
   if (editButton) {
     const data = editButton.closest("tr").dataset;
@@ -102,10 +102,10 @@ document.getElementById("tierTable")?.addEventListener("click", event => {
     openModal("tierModal");
   }
 
-  if (deleteButton) {
-    const data = deleteButton.closest("tr").dataset;
-    document.getElementById("delete-tier-id").value = data.tierId || "";
-    document.getElementById("delete-tier-name").textContent = data.tierName || "Tier";
-    openModal("deleteTierModal");
+  if (ArchiveButton) {
+    const data = ArchiveButton.closest("tr").dataset;
+    document.getElementById("Archive-tier-id").value = data.tierId || "";
+    document.getElementById("Archive-tier-name").textContent = data.tierName || "Tier";
+    openModal("ArchiveTierModal");
   }
 });

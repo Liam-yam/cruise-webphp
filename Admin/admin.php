@@ -66,7 +66,7 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
         redirect_admin("success", $action === "add_schedule" ? "Ship schedule added." : "Ship schedule updated.");
     }
 
-    if ($action === "delete_schedule") {
+    if ($action === "Archive_schedule") {
         $ticketNo = (int) ($_POST["ticket_no"] ?? 0);
         $countStmt = $conn->prepare("SELECT COUNT(*) AS booking_count FROM tbl_booking WHERE ticket_no = ?");
         $countStmt->bind_param("i", $ticketNo);
@@ -77,13 +77,13 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
             $stmt = $conn->prepare("UPDATE tbl_ticket SET status = 'suspended' WHERE ticket_no = ?");
             $stmt->bind_param("i", $ticketNo);
             $stmt->execute();
-            redirect_admin("success", "Schedule has bookings, so it was suspended instead of deleted.");
+            redirect_admin("success", "Schedule has bookings, so it was suspended instead of Archived.");
         }
 
-        $stmt = $conn->prepare("DELETE FROM tbl_ticket WHERE ticket_no = ?");
+        $stmt = $conn->prepare("Archive FROM tbl_ticket WHERE ticket_no = ?");
         $stmt->bind_param("i", $ticketNo);
         $stmt->execute();
-        redirect_admin("success", "Ship schedule deleted.");
+        redirect_admin("success", "Ship schedule Archived.");
     }
 
     if ($action === "ship_status") {
@@ -134,7 +134,7 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
         redirect_admin("success", $action === "add_tier" ? "Tier added." : "Tier updated.");
     }
 
-    if ($action === "delete_tier") {
+    if ($action === "Archive_tier") {
         $tierId = (int) ($_POST["tier_id"] ?? 0);
         $countStmt = $conn->prepare("SELECT COUNT(*) AS booking_count FROM tbl_booking WHERE tier_id = ?");
         $countStmt->bind_param("i", $tierId);
@@ -145,13 +145,13 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
             $stmt = $conn->prepare("UPDATE tbl_tier SET status = 'suspended' WHERE tier_id = ?");
             $stmt->bind_param("i", $tierId);
             $stmt->execute();
-            redirect_admin("success", "Tier has bookings, so it was suspended instead of deleted.");
+            redirect_admin("success", "Tier has bookings, so it was suspended instead of Archived.");
         }
 
-        $stmt = $conn->prepare("DELETE FROM tbl_tier WHERE tier_id = ?");
+        $stmt = $conn->prepare("Archive FROM tbl_tier WHERE tier_id = ?");
         $stmt->bind_param("i", $tierId);
         $stmt->execute();
-        redirect_admin("success", "Tier deleted.");
+        redirect_admin("success", "Tier Archived.");
     }
 }
 
@@ -266,7 +266,7 @@ foreach ($schedules as $schedule) {
                                 <td><?php echo e($s["departure_date"]); ?></td>
                                 <td><?php echo e($s["room_no"]); ?></td>
                                 <td><span class="badge badge--<?php echo e($s["status"]); ?>"><?php echo e(ucfirst($s["status"])); ?></span></td>
-                                <td class="table__actions"><button class="btn btn--sm btn--ghost edit-schedule-btn" type="button">Edit</button><button class="btn btn--sm btn--danger delete-schedule-btn" type="button">Delete</button></td>
+                                <td class="table__actions"><button class="btn btn--sm btn--ghost edit-schedule-btn" type="button">Edit</button><button class="btn btn--sm btn--danger Archive-schedule-btn" type="button">Archive</button></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -289,7 +289,7 @@ foreach ($schedules as $schedule) {
                                 <td class="table__price"><?php echo peso($t["base_price"]); ?></td>
                                 <td><?php echo $t["promo_price"] === null ? "-" : peso($t["promo_price"]); ?></td>
                                 <td><span class="badge badge--<?php echo e($t["status"]); ?>"><?php echo e(ucfirst($t["status"])); ?></span></td>
-                                <td class="table__actions"><button class="btn btn--sm btn--ghost edit-tier-btn" type="button">Edit</button><button class="btn btn--sm btn--danger delete-tier-btn" type="button">Delete</button></td>
+                                <td class="table__actions"><button class="btn btn--sm btn--ghost edit-tier-btn" type="button">Edit</button><button class="btn btn--sm btn--danger Archive-tier-btn" type="button">Archive</button></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -331,21 +331,21 @@ foreach ($schedules as $schedule) {
     </form>
 </div>
 
-<div class="modal-backdrop" id="deleteScheduleModal" role="dialog" aria-modal="true">
+<div class="modal-backdrop" id="ArchiveScheduleModal" role="dialog" aria-modal="true">
     <form class="modal modal--sm" method="post">
-        <input type="hidden" name="action" value="delete_schedule"><input type="hidden" name="ticket_no" id="delete-schedule-id">
-        <div class="modal__header"><h3 class="modal__title">Remove schedule?</h3><button class="modal__close" data-close="deleteScheduleModal" type="button">&times;</button></div>
-        <div class="modal__body"><p class="modal__text">If this schedule has bookings, it will be suspended instead.</p><p class="modal__text"><strong id="delete-schedule-name"></strong></p></div>
-        <div class="modal__footer"><button class="btn btn--outline" data-close="deleteScheduleModal" type="button">Cancel</button><button class="btn btn--danger" type="submit">Remove</button></div>
+        <input type="hidden" name="action" value="Archive_schedule"><input type="hidden" name="ticket_no" id="Archive-schedule-id">
+        <div class="modal__header"><h3 class="modal__title">Remove schedule?</h3><button class="modal__close" data-close="ArchiveScheduleModal" type="button">&times;</button></div>
+        <div class="modal__body"><p class="modal__text">If this schedule has bookings, it will be suspended instead.</p><p class="modal__text"><strong id="Archive-schedule-name"></strong></p></div>
+        <div class="modal__footer"><button class="btn btn--outline" data-close="ArchiveScheduleModal" type="button">Cancel</button><button class="btn btn--danger" type="submit">Remove</button></div>
     </form>
 </div>
 
-<div class="modal-backdrop" id="deleteTierModal" role="dialog" aria-modal="true">
+<div class="modal-backdrop" id="ArchiveTierModal" role="dialog" aria-modal="true">
     <form class="modal modal--sm" method="post">
-        <input type="hidden" name="action" value="delete_tier"><input type="hidden" name="tier_id" id="delete-tier-id">
-        <div class="modal__header"><h3 class="modal__title">Remove tier?</h3><button class="modal__close" data-close="deleteTierModal" type="button">&times;</button></div>
-        <div class="modal__body"><p class="modal__text">If this tier has bookings, it will be suspended instead.</p><p class="modal__text"><strong id="delete-tier-name"></strong></p></div>
-        <div class="modal__footer"><button class="btn btn--outline" data-close="deleteTierModal" type="button">Cancel</button><button class="btn btn--danger" type="submit">Remove</button></div>
+        <input type="hidden" name="action" value="Archive_tier"><input type="hidden" name="tier_id" id="Archive-tier-id">
+        <div class="modal__header"><h3 class="modal__title">Remove tier?</h3><button class="modal__close" data-close="ArchiveTierModal" type="button">&times;</button></div>
+        <div class="modal__body"><p class="modal__text">If this tier has bookings, it will be suspended instead.</p><p class="modal__text"><strong id="Archive-tier-name"></strong></p></div>
+        <div class="modal__footer"><button class="btn btn--outline" data-close="ArchiveTierModal" type="button">Cancel</button><button class="btn btn--danger" type="submit">Remove</button></div>
     </form>
 </div>
 
